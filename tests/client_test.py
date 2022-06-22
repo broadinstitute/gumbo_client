@@ -67,15 +67,27 @@ def test_reconcile_updates_only():
 
 def test_reconcile_deletes_only():
     existing = pd.DataFrame([{"a": 1, "b": 2}, {"a": 2, "b": 3}])
-    target = pd.DataFrame(
-        [
-            {"a": 1, "b": 2},
-        ]
-    )
+    target = pd.DataFrame([{"a": 1, "b": 2},])
     new_rows, updated_rows, to_delete = _reconcile("a", existing, target)
     assert len(new_rows) == 0
     assert len(updated_rows) == 0
     assert list(to_delete) == [2]
+
+
+def test_update_too_many_columns():
+    existing = pd.DataFrame([{"a": 1, "b": 2},])
+    target = pd.DataFrame([{"a": 1, "c": 4},])
+    with pytest.raises(
+        AssertionError, match=r".*columns to update do not exist in the target.*"
+    ):
+        _reconcile("a", existing, target)
+
+
+def test_missing_pk():
+    existing = pd.DataFrame([{"a": 1, "b": 2, "c": 3},])
+    target = pd.DataFrame([{"b": 2, "c": 4},])
+    with pytest.raises(AssertionError, match=r"Missing primary key column*"):
+        _reconcile("a", existing, target)
 
 
 def test_update_table(monkeypatch):

@@ -7,6 +7,20 @@ import json
 
 def _reconcile(pk_column, existing_table, target_table):
     "matches the rows by primary key column and returns a dataframe containing new rows, a dataframe containing rows in need of updating and the list of IDs of rows which should be deleted"
+
+    # verify that there are no extra columns in target_table
+    extra_columns = set(target_table.columns).difference(existing_table.columns)
+    assert (
+        len(extra_columns) == 0
+    ), f"The following columns to update do not exist in the target table: {extra_columns}"
+    assert pk_column in set(
+        target_table.columns
+    ), f"Missing primary key column in data frame: {pk_column}"
+
+    # verify the column types are the same
+    for col in target_table.columns:
+        assert target_table.dtypes[col] == existing_table[col]
+
     # convert rows to dicts and index by primary key
     existing_rows = {row[pk_column]: row for row in existing_table.to_dict("records")}
     new_rows = []
