@@ -6,7 +6,7 @@ Create a directory creating the connection information and keys:
 
 ```
 mkdir -p ~/.config/gumbo
-gcloud something something something (todo: fill this in)
+gcloud secrets versions access latest --secret='gumbo-client-config' --project depmap-gumbo > ~/.config/gumbo/config.json
 ```
 
 Install the package via:
@@ -28,6 +28,8 @@ client = gumbo_client.Client()
 df = client.get("table_name)
 # to write
 client.update("table_name", df)
+# after all writes are done call commit to make those changes permanent
+client.commit()
 ```
 
 # Setting up for development
