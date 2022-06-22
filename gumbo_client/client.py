@@ -223,5 +223,8 @@ class Client:
             _assert_dataframes_match(new_df, final_df[new_df.columns])
         return result
 
+    def commit(self):
+        self.connection.commit()
+
     def close(self):
         self.connection.close()
