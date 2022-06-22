@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gumbo_client"
+version = "0.1.0"
+authors = [
+  { name="Philip Montgomery", email="pmontgom@broadinstitute.org" },
+]
+description = "Gumbo client"
+readme = "README.md"
+requires-python = ">=3.7"
+dependencies = [ 
+    "pandas",
+    "psycopg2"
+]
