@@ -22,7 +22,8 @@ def _reconcile(pk_column, existing_table, target_table):
 
     # verify the column types are the same
     for col in target_table.columns:
-        assert target_table.dtypes[col] == existing_table[col]
+        if not (target_table[col].isnull().all() or existing_table[col].isnull().all()): # if cols have non-null values
+            assert target_table.dtypes[col] == existing_table.dtypes[col]
 
     # convert rows to dicts and index by primary key
     existing_rows = {
@@ -93,6 +94,8 @@ def _delete_rows(cursor, table_name, pk_column, ids):
     params = [[id] for id in ids]
     execute_batch(cursor, f"DELETE FROM {table_name} WHERE {pk_column} = %s", params)
 
+def _both_empty(a, b):
+    return (a is None or math.isnan(a)) and (b is None or math.isnan(b))
 
 def _assert_dataframes_match(a, b):
     assert (a.columns == b.columns).all()
@@ -100,7 +103,7 @@ def _assert_dataframes_match(a, b):
     for col in a.columns:
         assert len(a) == len(b)
         for ia, ib in zip(a[col], b[col]):
-            if ia != ib and not (math.isnan(ia) and math.isnan(ib)):
+            if ia != ib and not _both_empty(ia, ib):
                 print(f"mismatch in {col}: {ia} != {ib}")
                 mismatches += 1
     assert mismatches == 0
@@ -144,59 +147,64 @@ def _update(connection, table_name, cur_df, new_df):
         f"Inserted {len(new_rows)} rows, updated {len(updated_rows)} rows, and deleted {len(removed_rows)} rows"
     )
 
+def _build_db_connection(self, config_dir):
+    with open(os.path.join(config_dir, "config.json"), "rt") as fd:
+        config = json.load(fd)
+
+    cloud_sql_proxy_instance = config.get("cloud_sql_proxy_instance")
+    if cloud_sql_proxy_instance:
+        # if set, use cloud_sql_proxy to connect to DB
+        host = "localhost"
+        port = get_cloud_sql_proxy_port(
+            os.path.join(
+                config_dir, f"cloud_sql_proxy_{cloud_sql_proxy_instance}.json"
+            ),
+            cloud_sql_proxy_instance,
+        )
+        sslrootcert = sslcert = sslkey = None
+    else:
+        # otherwise, connect directly using SSL certs+key
+        host = config["host"]
+        # write out the various keys
+        sslrootcert = os.path.join(config_dir, "server-ca.pem")
+        sslcert = os.path.join(config_dir, "client-cert.pem")
+        sslkey = os.path.join(config_dir, "client-key.pem")
+
+        def write_prop(name, dest):
+            with open(dest, "wt") as fd:
+                fd.write(config[name])
+
+        write_prop("sslrootcert", sslrootcert)
+        write_prop("sslcert", sslcert)
+        write_prop("sslkey", sslkey)
+
+    database = config["database"]
+    user = config["user"]
+
+    kwargs = dict(
+        host=host,
+        database=database,
+        user=user,
+        port=port,
+        password=config.get("password"),
+        sslmode=config.get("sslmode"),
+        sslrootcert=sslrootcert,
+        sslcert=sslcert,
+        sslkey=sslkey,
+    )
+
+    print(f"connecting to {user}@{host}:{port}/{database}")
+    return psycopg2.connect(**kwargs)
+
 
 class Client:
-    def __init__(self, config_dir="~/.config/gumbo", sanity_check=True):
+    def __init__(self, config_dir="~/.config/gumbo", sanity_check=True, psycopg2_connection=None):
         config_dir = os.path.expanduser(config_dir)
         self.sanity_check = sanity_check
-        with open(os.path.join(config_dir, "config.json"), "rt") as fd:
-            config = json.load(fd)
-
-        cloud_sql_proxy_instance = config.get("cloud_sql_proxy_instance")
-        if cloud_sql_proxy_instance:
-            # if set, use cloud_sql_proxy to connect to DB
-            host = "localhost"
-            port = get_cloud_sql_proxy_port(
-                os.path.join(
-                    config_dir, f"cloud_sql_proxy_{cloud_sql_proxy_instance}.json"
-                ),
-                cloud_sql_proxy_instance,
-            )
-            sslrootcert = sslcert = sslkey = None
-        else:
-            # otherwise, connect directly using SSL certs+key
-            host = config["host"]
-            # write out the various keys
-            sslrootcert = os.path.join(config_dir, "server-ca.pem")
-            sslcert = os.path.join(config_dir, "client-cert.pem")
-            sslkey = os.path.join(config_dir, "client-key.pem")
-
-            def write_prop(name, dest):
-                with open(dest, "wt") as fd:
-                    fd.write(config[name])
-
-            write_prop("sslrootcert", sslrootcert)
-            write_prop("sslcert", sslcert)
-            write_prop("sslkey", sslkey)
-
-        database = config["database"]
-        user = config["user"]
-
-        kwargs = dict(
-            host=host,
-            database=database,
-            user=user,
-            port=port,
-            password=config.get("password"),
-            sslmode=config.get("sslmode"),
-            sslrootcert=sslrootcert,
-            sslcert=sslcert,
-            sslkey=sslkey,
-        )
-
-        print(f"connecting to {user}@{host}:{port}/{database}")
-        connection = psycopg2.connect(**kwargs)
-        self.connection = connection
+        if psycopg2_connection is None:
+            self.connection = _build_db_connection(config_dir)
+        else: 
+            self.connection = psycopg2_connection
 
     def get(self, table_name):
         cursor = self.connection.cursor()

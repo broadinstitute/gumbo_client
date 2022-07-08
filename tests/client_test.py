@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 from gumbo_client.client import _reconcile, _update_table
 import gumbo_client
@@ -22,6 +23,20 @@ def test_reconcile_all_types():
     assert str(updated_rows) == str(pd.DataFrame([{"a": 1, "b": 4}]))
     assert list(to_delete) == [3]
 
+
+def test_reconcile_null_values():
+    existing = pd.DataFrame([{"a": 1, "b": "test"}, {"a": 3, "b": np.nan}])
+    target = pd.DataFrame(
+        [
+            {"a": 1, "b": np.nan},  # update this value to None
+            {"a": 4, "b": np.nan}  # add this row
+            # delete row where a==3
+        ]
+    )
+    new_rows, updated_rows, to_delete = _reconcile("a", existing, target)
+    assert str(new_rows) == str(pd.DataFrame([{"a": 4, "b": None}]))
+    assert str(updated_rows) == str(pd.DataFrame([{"a": 1, "b": None}]))
+    assert list(to_delete) == [3]
 
 def test_reconcile_subset_of_columns():
     existing = pd.DataFrame([{"a": 1, "b": 2, "c": 3}, {"a": 3, "b": 4, "c": 9}])
