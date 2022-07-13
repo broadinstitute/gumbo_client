@@ -147,7 +147,7 @@ def _update(connection, table_name, cur_df, new_df):
         f"Inserted {len(new_rows)} rows, updated {len(updated_rows)} rows, and deleted {len(removed_rows)} rows"
     )
 
-def _build_db_connection(self, config_dir):
+def _build_db_connection(config_dir):
     with open(os.path.join(config_dir, "config.json"), "rt") as fd:
         config = json.load(fd)
 
