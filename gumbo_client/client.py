@@ -230,6 +230,23 @@ class Client:
             # only check the columns that were provided in the target table
             _assert_dataframes_match(new_df, final_df[new_df.columns])
         return result
+    
+    # Insert the given rows. Do not update or delete any existing rows. 
+    # If a column is in the table but missing from the dataframe, it is populated with a default value (typically null)
+    # For tables which have auto-generated ID columns, the dataframe does not need to contain ID values. 
+    # Throw an exception if a given row already exists in the table.
+    def insert_only(self, table_name, new_rows_df):
+        cursor = self.connection.cursor()
+        _insert_table(cursor, table_name, new_rows_df)
+        cursor.close()
+
+    # Update the given rows. Do not delete any existing rows or insert any new rows. 
+    # Throw an exception if a given row does not already exist in the table.
+    def update_only(self, table_name, updated_rows_df):
+        cursor = self.connection.cursor()
+        pk_column = _get_pk_column(cursor, table_name)
+        _update_table(cursor, table_name, pk_column, updated_rows_df)
+        cursor.close()
 
     def commit(self):
         self.connection.commit()
