@@ -198,13 +198,18 @@ def _build_db_connection(config_dir):
 
 
 class Client:
-    def __init__(self, config_dir="~/.config/gumbo", sanity_check=True, psycopg2_connection=None):
+    def __init__(self, config_dir="~/.config/gumbo", sanity_check=True, psycopg2_connection=None, username=None):
         config_dir = os.path.expanduser(config_dir)
         self.sanity_check = sanity_check
         if psycopg2_connection is None:
             self.connection = _build_db_connection(config_dir)
         else: 
             self.connection = psycopg2_connection
+        # set the username for use in audit logs
+        username = username or os.getlogin() + " (py)"
+        with self.connection.cursor() as cursor:
+            print("setting username to", username)
+            cursor.execute("SET my.username=%s", [username])
 
     def get(self, table_name):
         cursor = self.connection.cursor()
@@ -252,4 +257,7 @@ class Client:
         self.connection.commit()
 
     def close(self):
+        with self.connection.cursor() as cursor:
+            print("clearing username")
+            cursor.execute("SET my.username='invalid'")
         self.connection.close()
