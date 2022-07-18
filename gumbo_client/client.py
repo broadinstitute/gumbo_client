@@ -150,50 +150,48 @@ def _update(connection, table_name, cur_df, new_df):
 def _build_db_connection(config_dir):
     with open(os.path.join(config_dir, "config.json"), "rt") as fd:
         config = json.load(fd)
+    # cloud_sql_proxy_instance = config.get("cloud_sql_proxy_instance")
+    # if cloud_sql_proxy_instance:
+    #     # if set, use cloud_sql_proxy to connect to DB
+    #     host = "localhost"
+    #     port = get_cloud_sql_proxy_port(
+    #         os.path.join(
+    #             config_dir, f"cloud_sql_proxy_{cloud_sql_proxy_instance}.json"
+    #         ),
+    #         cloud_sql_proxy_instance,
+    #     )
+    #     sslrootcert = sslcert = sslkey = None
+    # else:
+    #     # otherwise, connect directly using SSL certs+key
+    #     host = config["host"]
+    #     # write out the various keys
+    #     sslrootcert = os.path.join(config_dir, "server-ca.pem")
+    #     sslcert = os.path.join(config_dir, "client-cert.pem")
+    #     sslkey = os.path.join(config_dir, "client-key.pem")
+    #     def write_prop(name, dest):
+    #         with open(dest, "wt") as fd:
+    #             fd.write(config[name])
 
-    cloud_sql_proxy_instance = config.get("cloud_sql_proxy_instance")
-    if cloud_sql_proxy_instance:
-        # if set, use cloud_sql_proxy to connect to DB
-        host = "localhost"
-        port = get_cloud_sql_proxy_port(
-            os.path.join(
-                config_dir, f"cloud_sql_proxy_{cloud_sql_proxy_instance}.json"
-            ),
-            cloud_sql_proxy_instance,
-        )
-        sslrootcert = sslcert = sslkey = None
-    else:
-        # otherwise, connect directly using SSL certs+key
-        host = config["host"]
-        # write out the various keys
-        sslrootcert = os.path.join(config_dir, "server-ca.pem")
-        sslcert = os.path.join(config_dir, "client-cert.pem")
-        sslkey = os.path.join(config_dir, "client-key.pem")
+    #     write_prop("sslrootcert", sslrootcert)
+    #     write_prop("sslcert", sslcert)
+    #     write_prop("sslkey", sslkey)
 
-        def write_prop(name, dest):
-            with open(dest, "wt") as fd:
-                fd.write(config[name])
-
-        write_prop("sslrootcert", sslrootcert)
-        write_prop("sslcert", sslcert)
-        write_prop("sslkey", sslkey)
 
     database = config["database"]
     user = config["user"]
 
     kwargs = dict(
-        host=host,
+        host="localhost",
         database=database,
         user=user,
-        port=port,
-        password=config.get("password"),
-        sslmode=config.get("sslmode"),
-        sslrootcert=sslrootcert,
-        sslcert=sslcert,
-        sslkey=sslkey,
+        port=5432,
+        password=config.get("password")
+        # sslmode=config.get("sslmode"),
+        # sslrootcert=sslrootcert,
+        # sslcert=sslcert,
+        # sslkey=sslkey,
     )
-
-    print(f"connecting to {user}@{host}:{port}/{database}")
+    print(f"Connecting to the '{database}' database.")
     return psycopg2.connect(**kwargs)
 
 
