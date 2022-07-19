@@ -2,6 +2,7 @@ import subprocess
 import socket
 import os
 import json
+import time
 
 
 def is_pid_valid(pid):
@@ -35,9 +36,28 @@ def alloc_free_port(start_port, max_tries=20):
     raise Exception(f"Could not find free port in range {port}-{port+max_tries}")
 
 
+def wait_until_port_listening(port, timeout=10):
+    start_time = time.time()
+    while True:
+        now = time.time()
+        if (now - start_time) > timeout:
+            raise Exception(
+                f"Timeout waiting for cloud_sql_proxy to start listening on port {port}"
+            )
+
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        result = s.connect_ex(("127.0.0.1", port))
+        successful_connection = result == 0
+        s.close()
+        if successful_connection:
+            break
+        time.sleep(0.5)
+
+
 def get_cloud_sql_proxy_port(pid_file, instance):
     "Starts cloud_sql_proxy if there isn't already an instance running and returns the port its listening on"
     # check for an existing config file
+    # print(f"Checking {pid_file}")
     if os.path.exists(pid_file):
         with open(pid_file, "rt") as fd:
             existing_config = json.load(fd)
@@ -54,7 +74,14 @@ def get_cloud_sql_proxy_port(pid_file, instance):
 
     port = alloc_free_port(5432)
     print(f"Starting cloud_sql_proxy for {instance} listening on port {port}")
-    proc = subprocess.Popen(["cloud_sql_proxy", f"-instances={instance}=tcp:{port}"])
+    command = ["cloud_sql_proxy", f"-instances={instance}=tcp:{port}"]
+    try:
+        proc = subprocess.Popen(command)
+    except FileNotFoundError as ex:
+        raise Exception(
+            "Failed to execute {command}. Have you installed cloud_sql_proxy in your path? (See README for instructions)"
+        )
+    wait_until_port_listening(port)
     with open(pid_file, "wt") as fd:
         fd.write(json.dumps({"pid": proc.pid, "port": port}))
     return port
