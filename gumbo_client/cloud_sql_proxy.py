@@ -79,7 +79,7 @@ def get_cloud_sql_proxy_port(pid_file, instance):
         proc = subprocess.Popen(command)
     except FileNotFoundError as ex:
         raise Exception(
-            "Failed to execute {command}. Have you installed cloud_sql_proxy in your path? (See README for instructions)"
+            "Failed to execute {command}. Have you run 'sh install_prereqs.sh' which should install cloud_sql_proxy in your path?"
         )
     wait_until_port_listening(port)
     with open(pid_file, "wt") as fd:
