@@ -2,7 +2,13 @@ Client for reading/writing to gumbo DB
 
 # Installation
 
-Create a directory creating the connection information and keys:
+First you will need rights in the depmap-gumbo google cloud project. For any user to
+access gumbo, that user account will need: 
+
+- Cloud SQL Client
+- Secret Manager Secret Accessor
+
+They will then need to create a directory creating the connection information and keys:
 
 ```
 mkdir -p ~/.config/gumbo
