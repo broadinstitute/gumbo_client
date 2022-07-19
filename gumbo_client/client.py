@@ -6,6 +6,7 @@ import os
 import json
 from .cloud_sql_proxy import get_cloud_sql_proxy_port
 import math
+import time
 
 
 def _reconcile(pk_column, existing_table, target_table):
@@ -145,6 +146,18 @@ def _update(connection, table_name, cur_df, new_df):
     )
 
 
+def _connect_with_retry(kwargs, max_attempts=3):
+    exceptions = []
+    for i in range(max_attempts):
+        try:
+            return psycopg2.connect(**kwargs)
+        except psycopg2.OperationalError as ex:
+            print(f"Warning: Connect fail, but will retry: {ex}")
+            exceptions.append(ex)
+        time.sleep(1)
+    raise Exception(f"Failed to connect: f{exceptions}")
+
+
 class Client:
     def __init__(self, config_dir="~/.config/gumbo", sanity_check=True):
         config_dir = os.path.expanduser(config_dir)
@@ -195,8 +208,7 @@ class Client:
         )
 
         print(f"connecting to {user}@{host}:{port}/{database}")
-        connection = psycopg2.connect(**kwargs)
-        self.connection = connection
+        self.connection = _connect_with_retry(kwargs)
 
     def get(self, table_name):
         cursor = self.connection.cursor()
