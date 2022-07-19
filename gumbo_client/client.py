@@ -23,7 +23,10 @@ def _reconcile(pk_column, existing_table, target_table):
 
     # verify the column types are the same
     for col in target_table.columns:
-        assert target_table.dtypes[col] == existing_table[col]
+        if not (
+            target_table[col].isnull().all() or existing_table[col].isnull().all()
+        ):  # if cols have non-null values
+            assert target_table.dtypes[col] == existing_table.dtypes[col]
 
     # convert rows to dicts and index by primary key
     existing_rows = {
@@ -95,13 +98,17 @@ def _delete_rows(cursor, table_name, pk_column, ids):
     execute_batch(cursor, f"DELETE FROM {table_name} WHERE {pk_column} = %s", params)
 
 
+def _both_empty(a, b):
+    return (a is None or math.isnan(a)) and (b is None or math.isnan(b))
+
+
 def _assert_dataframes_match(a, b):
     assert (a.columns == b.columns).all()
     mismatches = 0
     for col in a.columns:
         assert len(a) == len(b)
         for ia, ib in zip(a[col], b[col]):
-            if ia != ib and not (math.isnan(ia) and math.isnan(ib)):
+            if ia != ib and not _both_empty(ia, ib):
                 print(f"mismatch in {col}: {ia} != {ib}")
                 mismatches += 1
     assert mismatches == 0
@@ -146,6 +153,56 @@ def _update(connection, table_name, cur_df, new_df):
     )
 
 
+def _build_db_connection(config_dir):
+    with open(os.path.join(config_dir, "config.json"), "rt") as fd:
+        config = json.load(fd)
+
+    cloud_sql_proxy_instance = config.get("cloud_sql_proxy_instance")
+    if cloud_sql_proxy_instance:
+        # if set, use cloud_sql_proxy to connect to DB
+        host = "localhost"
+        port = get_cloud_sql_proxy_port(
+            os.path.join(
+                config_dir, f"cloud_sql_proxy_{cloud_sql_proxy_instance}.json"
+            ),
+            cloud_sql_proxy_instance,
+        )
+        sslrootcert = sslcert = sslkey = None
+    else:
+        # otherwise, connect directly using SSL certs+key
+        host = config["host"]
+        # write out the various keys
+        sslrootcert = os.path.join(config_dir, "server-ca.pem")
+        sslcert = os.path.join(config_dir, "client-cert.pem")
+        sslkey = os.path.join(config_dir, "client-key.pem")
+
+        def write_prop(name, dest):
+            with open(dest, "wt") as fd:
+                fd.write(config[name])
+
+        write_prop("sslrootcert", sslrootcert)
+        write_prop("sslcert", sslcert)
+        write_prop("sslkey", sslkey)
+
+    database = config["database"]
+    user = config["user"]
+
+    kwargs = dict(
+        host=host,
+        database=database,
+        user=user,
+        port=port,
+        password=config.get("password"),
+        sslmode=config.get("sslmode"),
+        sslrootcert=sslrootcert,
+        sslcert=sslcert,
+        sslkey=sslkey,
+    )
+
+    print(f"connecting to {user}@{host}:{port}/{database}")
+    return _connect_with_retry(kwargs)
+
+
 def _connect_with_retry(kwargs, max_attempts=3):
     exceptions = []
     for i in range(max_attempts):
@@ -159,56 +216,26 @@ def _connect_with_retry(kwargs, max_attempts=3):
 
 
 class Client:
-    def __init__(self, config_dir="~/.config/gumbo", sanity_check=True):
+    def __init__(
+        self,
+        config_dir="~/.config/gumbo",
+        sanity_check=True,
+        psycopg2_connection=None,
+        username=None,
+    ):
         config_dir = os.path.expanduser(config_dir)
         self.sanity_check = sanity_check
-        with open(os.path.join(config_dir, "config.json"), "rt") as fd:
-            config = json.load(fd)
 
-        cloud_sql_proxy_instance = config.get("cloud_sql_proxy_instance")
-        if cloud_sql_proxy_instance:
-            # if set, use cloud_sql_proxy to connect to DB
-            host = "localhost"
-            port = get_cloud_sql_proxy_port(
-                os.path.join(
-                    config_dir, f"cloud_sql_proxy_{cloud_sql_proxy_instance}.json"
-                ),
-                cloud_sql_proxy_instance,
-            )
-            sslrootcert = sslcert = sslkey = None
+        if psycopg2_connection is None:
+            self.connection = _build_db_connection(config_dir)
         else:
-            # otherwise, connect directly using SSL certs+key
-            host = config["host"]
-            # write out the various keys
-            sslrootcert = os.path.join(config_dir, "server-ca.pem")
-            sslcert = os.path.join(config_dir, "client-cert.pem")
-            sslkey = os.path.join(config_dir, "client-key.pem")
+            self.connection = psycopg2_connection
 
-            def write_prop(name, dest):
-                with open(dest, "wt") as fd:
-                    fd.write(config[name])
-
-            write_prop("sslrootcert", sslrootcert)
-            write_prop("sslcert", sslcert)
-            write_prop("sslkey", sslkey)
-
-        database = config["database"]
-        user = config["user"]
-
-        kwargs = dict(
-            host=host,
-            database=database,
-            user=user,
-            port=port,
-            password=config.get("password"),
-            sslmode=config.get("sslmode"),
-            sslrootcert=sslrootcert,
-            sslcert=sslcert,
-            sslkey=sslkey,
-        )
-
-        print(f"connecting to {user}@{host}:{port}/{database}")
-        self.connection = _connect_with_retry(kwargs)
+        # set the username for use in audit logs
+        username = username or os.getlogin() + " (py)"
+        with self.connection.cursor() as cursor:
+            print("setting username to", username)
+            cursor.execute("SET my.username=%s", [username])
 
     def get(self, table_name):
         cursor = self.connection.cursor()
@@ -235,8 +262,28 @@ class Client:
             _assert_dataframes_match(new_df, final_df[new_df.columns])
         return result
 
+    # Insert the given rows. Do not update or delete any existing rows.
+    # If a column is in the table but missing from the dataframe, it is populated with a default value (typically null)
+    # For tables which have auto-generated ID columns, the dataframe does not need to contain ID values.
+    # Throw an exception if a given row already exists in the table.
+    def insert_only(self, table_name, new_rows_df):
+        cursor = self.connection.cursor()
+        _insert_table(cursor, table_name, new_rows_df)
+        cursor.close()
+
+    # Update the given rows. Do not delete any existing rows or insert any new rows.
+    # Throw an exception if a given row does not already exist in the table.
+    def update_only(self, table_name, updated_rows_df):
+        cursor = self.connection.cursor()
+        pk_column = _get_pk_column(cursor, table_name)
+        _update_table(cursor, table_name, pk_column, updated_rows_df)
+        cursor.close()
+
     def commit(self):
         self.connection.commit()
 
     def close(self):
+        with self.connection.cursor() as cursor:
+            print("clearing username")
+            cursor.execute("SET my.username='invalid'")
         self.connection.close()
