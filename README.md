@@ -43,6 +43,8 @@ df = client.get("table_name)
 client.update("table_name", df)
 # after all writes are done call commit to make those changes permanent
 client.commit()
+
+client.close()
 ```
 
 ## Connecting to the Staging Database
