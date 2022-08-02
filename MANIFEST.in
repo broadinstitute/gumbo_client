@@ -1,1 +1,1 @@
-include name_mapping.json
+include gumbo_client/*.json
