@@ -246,7 +246,6 @@ class Client:
             print("setting username to", username)
             cursor.execute("SET my.username=%s", [username])
 
-
     def get(self, table_name):
         cursor = self.connection.cursor()
         _set_savepoint(cursor)
@@ -258,7 +257,7 @@ class Client:
             raise
         finally:
             cursor.close()
-        
+
         df = pd.read_sql(
             f"select * from {table_name} order by {pk_column}", self.connection
         )
