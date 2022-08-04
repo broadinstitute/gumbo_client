@@ -97,6 +97,11 @@ def _delete_rows(cursor, table_name, pk_column, ids):
     params = [[id] for id in ids]
     execute_batch(cursor, f"DELETE FROM {table_name} WHERE {pk_column} = %s", params)
 
+def _set_savepoint(cursor):
+    cursor.execute("SAVEPOINT client_savepoint")
+
+def _rollback_to_savepoint(cursor):
+    cursor.execute("ROLLBACK TO SAVEPOINT client_savepoint")
 
 def _both_empty(a, b):
     return (a is None or math.isnan(a)) and (b is None or math.isnan(b))
@@ -146,6 +151,9 @@ def _update(connection, table_name, cur_df, new_df):
         _insert_table(cursor, table_name, new_rows)
         _update_table(cursor, table_name, pk_column, updated_rows)
         _delete_rows(cursor, table_name, pk_column, removed_rows)
+        _set_savepoint(cursor)
+    except:
+        _rollback_to_savepoint(cursor)
     finally:
         cursor.close()
     print(
@@ -236,12 +244,17 @@ class Client:
         with self.connection.cursor() as cursor:
             print("setting username to", username)
             cursor.execute("SET my.username=%s", [username])
+            _set_savepoint(cursor)
+
 
     def get(self, table_name):
         cursor = self.connection.cursor()
 
         try:
             pk_column = _get_pk_column(cursor, table_name)
+            _set_savepoint(cursor)
+        except:
+            _rollback_to_savepoint(cursor)
         finally:
             cursor.close()
 
@@ -268,19 +281,32 @@ class Client:
     # Throw an exception if a given row already exists in the table.
     def insert_only(self, table_name, new_rows_df):
         cursor = self.connection.cursor()
-        _insert_table(cursor, table_name, new_rows_df)
-        cursor.close()
+        try:
+            _insert_table(cursor, table_name, new_rows_df)
+            _set_savepoint(cursor)
+        except:
+            _rollback_to_savepoint(cursor)
+        finally:
+            cursor.close()
 
     # Update the given rows. Do not delete any existing rows or insert any new rows.
     # Throw an exception if a given row does not already exist in the table.
     def update_only(self, table_name, updated_rows_df):
         cursor = self.connection.cursor()
-        pk_column = _get_pk_column(cursor, table_name)
-        _update_table(cursor, table_name, pk_column, updated_rows_df)
-        cursor.close()
+        try:
+            pk_column = _get_pk_column(cursor, table_name)
+            _update_table(cursor, table_name, pk_column, updated_rows_df)
+            _set_savepoint(cursor)
+        except:
+            _rollback_to_savepoint(cursor)
+        finally:
+            cursor.close()
 
     def commit(self):
         self.connection.commit()
+
+    def rollback(self):
+        self.connection.rollback()
 
     def close(self):
         with self.connection.cursor() as cursor:
