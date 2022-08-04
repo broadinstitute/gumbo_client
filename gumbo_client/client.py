@@ -142,6 +142,7 @@ def _get_pk_column(cursor, table_name):
 
 def _update(connection, table_name, cur_df, new_df):
     cursor = connection.cursor()
+    _set_savepoint(cursor)
 
     try:
         pk_column = _get_pk_column(cursor, table_name)
@@ -151,9 +152,9 @@ def _update(connection, table_name, cur_df, new_df):
         _insert_table(cursor, table_name, new_rows)
         _update_table(cursor, table_name, pk_column, updated_rows)
         _delete_rows(cursor, table_name, pk_column, removed_rows)
-        _set_savepoint(cursor)
     except:
         _rollback_to_savepoint(cursor)
+        raise
     finally:
         cursor.close()
     print(
@@ -244,20 +245,20 @@ class Client:
         with self.connection.cursor() as cursor:
             print("setting username to", username)
             cursor.execute("SET my.username=%s", [username])
-            _set_savepoint(cursor)
 
 
     def get(self, table_name):
         cursor = self.connection.cursor()
+        _set_savepoint(cursor)
 
         try:
             pk_column = _get_pk_column(cursor, table_name)
-            _set_savepoint(cursor)
         except:
             _rollback_to_savepoint(cursor)
+            raise
         finally:
             cursor.close()
-
+        
         df = pd.read_sql(
             f"select * from {table_name} order by {pk_column}", self.connection
         )
@@ -281,11 +282,12 @@ class Client:
     # Throw an exception if a given row already exists in the table.
     def insert_only(self, table_name, new_rows_df):
         cursor = self.connection.cursor()
+        _set_savepoint(cursor)
         try:
             _insert_table(cursor, table_name, new_rows_df)
-            _set_savepoint(cursor)
         except:
             _rollback_to_savepoint(cursor)
+            raise
         finally:
             cursor.close()
 
@@ -293,12 +295,13 @@ class Client:
     # Throw an exception if a given row does not already exist in the table.
     def update_only(self, table_name, updated_rows_df):
         cursor = self.connection.cursor()
+        _set_savepoint(cursor)
         try:
             pk_column = _get_pk_column(cursor, table_name)
             _update_table(cursor, table_name, pk_column, updated_rows_df)
-            _set_savepoint(cursor)
         except:
             _rollback_to_savepoint(cursor)
+            raise
         finally:
             cursor.close()
 
