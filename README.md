@@ -50,6 +50,8 @@ client.insert_only("table_name", new_rows_df) # throws an exception if a given r
 
 # after all writes are done call commit to make those changes permanent
 client.commit()
+# or call rollback to undo all changes since the last commit
+client.rollback()
 # finally, close the database connection
 client.close()
 ```
