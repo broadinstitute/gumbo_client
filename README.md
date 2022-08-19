@@ -39,11 +39,18 @@ client = gumbo_client.Client(username="firstInitialLastName")
 
 # to read
 df = client.get("table_name)
-# to write
+# to create new rows and/or update existing rows, modify the dataframe and then run:
 client.update("table_name", df)
+# to update the table to exactly match the dataframe, run:
+client.update("table_name", df, delete_missing_rows=True)
+# to only update existing rows:
+client.update_only("table_name", df) # throws an exception if a given row doesn't already exist
+# to only insert new rows:
+client.insert_only("table_name", new_rows_df) # throws an exception if a given row already exists
+
 # after all writes are done call commit to make those changes permanent
 client.commit()
-
+# finally, close the database connection
 client.close()
 ```
 
