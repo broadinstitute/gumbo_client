@@ -1,4 +1,3 @@
-from re import match
 import pandas as pd
 from psycopg2.extras import execute_batch, execute_values
 import psycopg2
@@ -123,6 +122,9 @@ def _assert_dataframes_match(a, b):
     #         matches
     #     ).all(), f'Sanity check failed: After update column "{col}" was different then expected: {new_df[col][~matches]} != {final_df[col][~matches]}'
 
+def _assert_has_subset_of_rows(subset_df, full_df):
+    assert (subset_df.columns == full_df.columns).all()
+    assert len(subset_df.merge(full_df)) == len(subset_df)
 
 # taken from https://wiki.postgresql.org/wiki/Retrieve_primary_key_columns
 PRIMARY_KEY_QUERY = """SELECT a.attname, format_type(a.atttypid, a.atttypmod) AS data_type
@@ -140,7 +142,7 @@ def _get_pk_column(cursor, table_name):
     return rows[0][0]
 
 
-def _update(connection, table_name, cur_df, new_df):
+def _update(connection, table_name, cur_df, new_df, delete_missing_rows=False):
     cursor = connection.cursor()
     _set_savepoint(cursor)
 
@@ -151,7 +153,8 @@ def _update(connection, table_name, cur_df, new_df):
 
         _insert_table(cursor, table_name, new_rows)
         _update_table(cursor, table_name, pk_column, updated_rows)
-        _delete_rows(cursor, table_name, pk_column, removed_rows)
+        if delete_missing_rows:
+            _delete_rows(cursor, table_name, pk_column, removed_rows)
     except:
         _rollback_to_savepoint(cursor)
         raise
@@ -263,16 +266,19 @@ class Client:
         )
         return df
 
-    def update(self, table_name, new_df):
+    def update(self, table_name, new_df, delete_missing_rows=False):
         cur_df = self.get(table_name)
 
-        result = _update(self.connection, table_name, cur_df, new_df)
+        result = _update(self.connection, table_name, cur_df, new_df, delete_missing_rows)
         if self.sanity_check:
             # if we want to be paranoid, fetch the dataframe back and verify that it's the same as what we said we
-            # wanted to target.
-            final_df = self.get(table_name)
+            # wanted to target. 
+            table_df = self.get(table_name)
             # only check the columns that were provided in the target table
-            _assert_dataframes_match(new_df, final_df[new_df.columns])
+            if delete_missing_rows:
+                _assert_dataframes_match(new_df, table_df[new_df.columns])
+            else: 
+                _assert_has_subset_of_rows(new_df, table_df[new_df.columns])
         return result
 
     # Insert the given rows. Do not update or delete any existing rows.
