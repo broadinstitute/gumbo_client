@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 import pandas as pd
 from psycopg2.extras import execute_batch, execute_values
 import psycopg2
@@ -142,7 +143,7 @@ def _get_pk_column(cursor, table_name):
     return rows[0][0]
 
 
-def _update(connection, table_name, cur_df, new_df, delete_missing_rows=False):
+def _update(connection, table_name, cur_df, new_df, username, delete_missing_rows=False, reason=None):
     cursor = connection.cursor()
     _set_savepoint(cursor)
 
@@ -155,6 +156,9 @@ def _update(connection, table_name, cur_df, new_df, delete_missing_rows=False):
         _update_table(cursor, table_name, pk_column, updated_rows)
         if delete_missing_rows:
             _delete_rows(cursor, table_name, pk_column, removed_rows)
+        
+        deleted_row_count = len(removed_rows) if delete_missing_rows else 0
+        _log_bulk_update(connection, username, table_name, updated_rows.shape[0], new_rows.shape[0], deleted_row_count, reason=reason)
     except:
         _rollback_to_savepoint(cursor)
         raise
@@ -163,6 +167,16 @@ def _update(connection, table_name, cur_df, new_df, delete_missing_rows=False):
     print(
         f"Inserted {len(new_rows)} rows, updated {len(updated_rows)} rows, and deleted {len(removed_rows)} rows"
     )
+
+
+def _log_bulk_update(connection, username, tablename, rows_updated=0, rows_deleted=0, rows_inserted=0, reason=None):
+    reason_val = f"'{reason}'" if reason is not None else "null"
+    insert_statement = f"""INSERT INTO bulk_update_log 
+        (username, "timestamp", tablename, rows_updated, rows_deleted, rows_inserted, reason) 
+        VALUES ('{username}', CURRENT_TIMESTAMP, '{tablename}', {rows_updated}, {rows_deleted}, {rows_inserted}, {reason_val});"""
+    cursor = connection.cursor()
+    cursor.execute(insert_statement)
+    cursor.close()
 
 
 def _build_db_connection(config_dir):
@@ -244,10 +258,10 @@ class Client:
             self.connection = psycopg2_connection
 
         # set the username for use in audit logs
-        username = username or os.getlogin() + " (py)"
+        self.username = username or os.getlogin() + " (py)"
         with self.connection.cursor() as cursor:
-            print("setting username to", username)
-            cursor.execute("SET my.username=%s", [username])
+            print("setting username to", self.username)
+            cursor.execute("SET my.username=%s", [self.username])
 
     def get(self, table_name):
         cursor = self.connection.cursor()
@@ -266,10 +280,10 @@ class Client:
         )
         return df
 
-    def update(self, table_name, new_df, delete_missing_rows=False):
+    def update(self, table_name, new_df, delete_missing_rows=False, reason=None):
         cur_df = self.get(table_name)
 
-        result = _update(self.connection, table_name, cur_df, new_df, delete_missing_rows)
+        result = _update(self.connection, table_name, cur_df, new_df, self.username, delete_missing_rows, reason=reason)
         if self.sanity_check:
             # if we want to be paranoid, fetch the dataframe back and verify that it's the same as what we said we
             # wanted to target. 
@@ -285,11 +299,12 @@ class Client:
     # If a column is in the table but missing from the dataframe, it is populated with a default value (typically null)
     # For tables which have auto-generated ID columns, the dataframe does not need to contain ID values.
     # Throw an exception if a given row already exists in the table.
-    def insert_only(self, table_name, new_rows_df):
+    def insert_only(self, table_name, new_rows_df, reason=None):
         cursor = self.connection.cursor()
         _set_savepoint(cursor)
         try:
             _insert_table(cursor, table_name, new_rows_df)
+            _log_bulk_update(self.connection, self.username, table_name, rows_inserted=new_rows_df.shape[0], reason=reason)
         except:
             _rollback_to_savepoint(cursor)
             raise
@@ -298,12 +313,13 @@ class Client:
 
     # Update the given rows. Do not delete any existing rows or insert any new rows.
     # Throw an exception if a given row does not already exist in the table.
-    def update_only(self, table_name, updated_rows_df):
+    def update_only(self, table_name, updated_rows_df, reason=None):
         cursor = self.connection.cursor()
         _set_savepoint(cursor)
         try:
             pk_column = _get_pk_column(cursor, table_name)
             _update_table(cursor, table_name, pk_column, updated_rows_df)
+            _log_bulk_update(self.connection, self.username, table_name, rows_updated=updated_rows_df.shape[0], reason=reason)
         except:
             _rollback_to_savepoint(cursor)
             raise
