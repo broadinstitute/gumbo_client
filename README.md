@@ -19,41 +19,42 @@ sh install_prereqs.sh
 
 ## Get Permission to Access the Database
 
-#### First you will need rights in the depmap-gumbo google cloud project. 
+#### Ask for permissions in the depmap-gumbo google cloud project. 
 
-For any user to have read and write access gumbo, that user account will need: 
+For any user to have read and write access gumbo, that user account will need to be given: 
 
 - Cloud SQL Client
 - Secret Manager Secret Accessor
 
-For read-only access, the user will need:
+For read-only access, the user will need to be given:
 
 - Cloud SQL Client
 - Viewer access for the `gumbo-client-readonly-config` secret in Secrets Manager
 
-#### You will then need to create a directory with the database connection information and keys:
+#### Create a directory with the database connection information and keys:
 
-The secrets and configs you use will depend on the level of access you want:
+The secrets and configs you use will depend on the type access you want:
 
 
-For read and write access to the production database:
-```
-mkdir -p ~/.config/gumbo
-gcloud secrets versions access latest --secret='gumbo-client-config' --project depmap-gumbo > ~/.config/gumbo/config.json
-```
+- For read and write access to the production database:
+    ```
+    mkdir -p ~/.config/gumbo
+    gcloud secrets versions access latest --secret='gumbo-client-config' --project depmap-gumbo > ~/.config/gumbo/config.json
+    ```
 
-For read-only access to the production database:
-```
-mkdir -p ~/.config/gumbo-read-only
-gcloud secrets versions access latest --secret='gumbo-client-readonly-config' --project depmap-gumbo > ~/.config/gumbo-read-only/config.json
-```
+- For read-only access to the production database:
+    ```
+    mkdir -p ~/.config/gumbo-read-only
+    gcloud secrets versions access latest --secret='gumbo-client-readonly-config' --project depmap-gumbo > ~/.config/gumbo-read-only/config.json
+    ```
 
-For read and write access to the staging database:
-```
-mkdir -p ~/.config/gumbo-staging
-gcloud secrets versions access latest --secret='gumbo-staging-client-config' --project depmap-gumbo > ~/.config/gumbo-staging/config.json
-```
-### Then specify your config file location when you initialize the client:
+- For read and write access to the staging database:
+    ```
+    mkdir -p ~/.config/gumbo-staging
+    gcloud secrets versions access latest --secret='gumbo-staging-client-config' --project depmap-gumbo > ~/.config/gumbo-staging/config.json
+    ```
+
+#### Then specify your config file location when you initialize the client:
 
 ```
 client = gumbo_client.Client(config_dir="~/.config/gumbo-read-only", username="firstInitialLastName")
