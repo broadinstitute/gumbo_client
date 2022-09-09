@@ -65,13 +65,21 @@ And you should be good to go! :tada:
 
 ## Usage
 
+Read or write from the following tables:
+- model
+- model_condition
+- omics_profile
+- omics_sequencing
+- screen
+- screen_sequence
+
 ```
 import gumbo_client
 
 client = gumbo_client.Client(config_dir="~/.config/gumbo", username="firstInitialLastName")
 
 # to read
-df = client.get("table_name)
+df = client.get("table_name")
 
 # to create new rows and/or update existing rows, modify the dataframe and then run:
 client.update("table_name", df)
