@@ -1,3 +1,5 @@
+test-data/
+.ipynb_checkpoints/
 dist
 gumbo_client/__pycache__
 *~
