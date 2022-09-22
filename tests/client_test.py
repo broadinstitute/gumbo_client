@@ -174,3 +174,16 @@ def test_against_local_postgres(tmpdir):
             {"id": 2, "str_col": "b2", "float_col": 12.0},
         ]
     )
+
+def test_assert_has_subset_of_rows():
+    full_df = pd.DataFrame([{"a": 1, "b": 2}, {"a": 3, "b": 4}, {"a": 1, "b": 12}, {"a": 3, "b": 14}])
+    subset_df = pd.DataFrame([{"a": 1, "b": 2}, {"a": 3, "b": 4}])
+    superset_df = pd.DataFrame([{"a": 1, "b": 2}, {"a": 13, "b": 14}])
+
+    gumbo_client.client._assert_has_subset_of_rows(subset_df=subset_df, full_df=full_df) # no exception thrown
+
+    with pytest.raises(Exception) as e_info:
+        gumbo_client.client._assert_has_subset_of_rows(subset_df=superset_df, full_df=full_df) # throws exception
+
+    with pytest.raises(Exception) as e_info:
+        gumbo_client.client._assert_has_subset_of_rows(subset_df=full_df, full_df=subset_df) # throws exception
