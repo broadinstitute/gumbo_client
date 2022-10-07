@@ -19,7 +19,7 @@ sh install_prereqs.sh
 
 ## Get Permission to Access the Database
 
-#### Ask for permissions in the depmap-gumbo google cloud project. 
+#### Ask Sarah Wessel (or one of the developers) for the following permissions in the depmap-gumbo google cloud project
 
 For any user to have read and write access gumbo, that user account will need to be given: 
 
