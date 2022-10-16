@@ -12,6 +12,9 @@ import psycopg2
 import os
 import logging
 from enum import Enum
+import pandas as pd
+
+from sqlpath import read_schema_from_postgresql, query_to_sql, make_query
 
 log = logging.getLogger(__name__)
 
@@ -43,14 +46,22 @@ class ExportFormat(str, Enum):
     csv="csv"
     json="json"
 
+
 @app.get("/table/{name}")
-def read_item(name: str, format: ExportFormat = ExportFormat.json, client: Client = Depends(get_gumbo_client)):
+def export_table(name: str, format: ExportFormat = ExportFormat.json, fields:str = "", client: Client = Depends(get_gumbo_client)):
+    print("format", format)
     tables = get_tables()
     assert name in tables
 
-
-    table = client.get(name)
-
+    if fields == "":
+        table = client.get(name)
+    else:
+        schema = read_schema_from_postgresql(client.connection)
+        query = make_query(name, fields)
+        sql = query_to_sql(query, schema)
+        table = pd.read_sql(
+            sql, client.connection
+        )
 
     if format == ExportFormat.json:
         # turn into a dict of columns, replacing nans because those are not valid json values
