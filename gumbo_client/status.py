@@ -4,10 +4,16 @@ from enum import Enum
 # All possible statuses, in order of precidence
 # Ex. a cell line with one completed attempt and one failed attempt should be considered complete
 class Status(Enum):
-    available = 1
-    failed = 2
-    in_progress = 3
-    complete = 4
+    failed = 1
+    in_progress = 2
+    complete = 3
+
+
+status_display_name_dict = {
+    Status.failed: "Failed",
+    Status.in_progress: "In Progress",
+    Status.complete: "Data in Portal"
+}
 
 
 # Each ModelStatusSummary object contains all of the info we need about the model
@@ -31,10 +37,10 @@ class ModelStatusSummary:
                 self.crispr_failure_type = crispr_failure_type
 
     def to_json_dict(self) -> dict:
-        json = {datatype: status_enum.name for datatype, status_enum in self.statuses.items() if status_enum}
+        json = {datatype: status_display_name_dict[status_enum] for datatype, status_enum in self.statuses.items() if status_enum}
         json["lineage"] = self.lineage 
         json["peddep_subgroup"] = self.peddep_subgroup
-        json["crispr_failure_type"] = self.crispr_failure_type if self.crispr_failure_type is not None else "Unknown"
+        json["crispr_failure_type"] = self.crispr_failure_type 
         return json
 
 
@@ -98,22 +104,23 @@ def get_omics_status(profile_status, main_sequencing_id, blacklist) -> Status:
 def get_crispr_status(status, screener_qc, cds_qc):
     if screener_qc=="PASS" and cds_qc=="PASS":
         return Status.complete
-    screener_qc_failed = (screener_qc is not None) and ("FAIL" in screener_qc)
-    cds_qc_failed = (cds_qc is not None) and (cds_qc!="PASS")
-    if status=="Terminal Fail" or status=="Shelved" or screener_qc_failed or cds_qc_failed:
+    if status=="Terminal Fail" or cds_qc_failed(cds_qc) or screener_qc_failed(screener_qc):
         return Status.failed
-    elif status is not None:
+    elif (cds_qc is None and screener_qc=="PASS") or (status is not None):
         return Status.in_progress
     else:
         return None
 
 def get_crispr_failure_type(screener_qc, cds_qc, status, substatus):
-    screener_qc_failed = (screener_qc is not None) and ("FAIL" in screener_qc)
-    cds_qc_failed = (cds_qc is not None) and (cds_qc!="PASS")
-    if screener_qc_failed:
+    if screener_qc_failed(screener_qc):
         return "Screener QC Failed"
-    elif cds_qc_failed:
+    elif cds_qc_failed(cds_qc):
         return "CDS QC Failed"
     else:
         return status
-    pass
+
+def screener_qc_failed(screener_qc):
+    return (screener_qc is not None) and ("FAIL" in screener_qc)
+
+def cds_qc_failed(cds_qc):
+    return (cds_qc is not None) and (cds_qc!="PASS") and (cds_qc!="missing CN data;")
