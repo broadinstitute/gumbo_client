@@ -84,19 +84,14 @@ def add_crispr_statuses(cursor, status_dict):
 
 
 def get_omics_status(profile_status, main_sequencing_id, blacklist) -> Status:
-    # Map from gumbo omics profile records to the 
-    status_string_to_enum = {
-        "In progress": Status.in_progress,
-        "Ordered": Status.in_progress,
-        "Done": Status.in_progress,
-        " Abandoned": Status.failed
-    }
     if blacklist:
         return Status.failed
-    if main_sequencing_id is not None:
+    elif main_sequencing_id is not None:
         return Status.complete
-    if profile_status is not None:
-        return status_string_to_enum[profile_status]
+    elif profile_status is not None and "Abandoned" in profile_status:
+        return Status.failed
+    elif profile_status is not None:
+        return Status.in_progress
     else: 
         return None
 
