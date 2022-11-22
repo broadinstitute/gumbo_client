@@ -8,10 +8,10 @@ A python package for reading/writing to the gumbo database
 Install the package via:
 
 ```
-pip install .
+pip install git+https://github.com/broadinstitute/gumbo_client.git
 ```
 
-Install prerequisites and set up environment variables necessary for creating a database connection:
+Clone the repo to install prerequisites and set up environment variables necessary for creating a database connection:
 ```
 sh install_prereqs.sh
 ```
