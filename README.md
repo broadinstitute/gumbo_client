@@ -11,7 +11,7 @@ Install the package via:
 pip install git+https://github.com/broadinstitute/gumbo_client.git
 ```
 
-Clone the repo to install prerequisites and set up environment variables necessary for creating a database connection:
+If you want the client to create a database connection for you (this is likely most users), you will also need to clone the repo and run the following script to install prerequisites and set up environment variables necessary for creating a database connection:
 ```
 sh install_prereqs.sh
 ```
