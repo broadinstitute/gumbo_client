@@ -73,6 +73,8 @@ Read or write from the following tables:
 - screen
 - screen_sequence
 
+The client will autocommit changes after insertions or updates.
+
 ```
 import gumbo_client
 
@@ -92,12 +94,6 @@ client.update_only("table_name", df) # throws an exception if a given row doesn'
 
 # to only insert new rows:
 client.insert_only("table_name", new_rows_df) # throws an exception if a given row already exists
-
-# after all writes are done call commit to make those changes permanent
-client.commit()
-
-# or call rollback to undo all changes since the last commit
-client.rollback()
 
 # finally, close the database connection
 client.close()

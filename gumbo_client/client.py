@@ -99,12 +99,6 @@ def _delete_rows(cursor, table_name, pk_column, ids):
     params = [[id] for id in ids]
     execute_batch(cursor, f"DELETE FROM {table_name} WHERE {pk_column} = %s", params)
 
-def _set_savepoint(cursor):
-    cursor.execute("SAVEPOINT client_savepoint")
-
-def _rollback_to_savepoint(cursor):
-    cursor.execute("ROLLBACK TO SAVEPOINT client_savepoint")
-
 def _both_empty(a, b):
     return (a is None or math.isnan(a)) and (b is None or math.isnan(b))
 
@@ -147,7 +141,6 @@ def _get_pk_column(cursor, table_name):
 
 def _update(connection, table_name, cur_df, new_df, username, delete_missing_rows=False, reason=None):
     cursor = connection.cursor()
-    _set_savepoint(cursor)
 
     try:
         pk_column = _get_pk_column(cursor, table_name)
@@ -162,7 +155,6 @@ def _update(connection, table_name, cur_df, new_df, username, delete_missing_row
         deleted_row_count = len(removed_rows) if delete_missing_rows else 0
         _log_bulk_update(connection, username, table_name, updated_rows.shape[0], new_rows.shape[0], deleted_row_count, reason=reason)
     except:
-        _rollback_to_savepoint(cursor)
         raise
     finally:
         cursor.close()
@@ -228,7 +220,9 @@ def _build_db_connection(config_dir):
     )
 
     print(f"connecting to {user}@{host}:{port}/{database}")
-    return _connect_with_retry(kwargs)
+    connection = _connect_with_retry(kwargs)
+    connection.autocommit = True
+    return connection
 
 
 def _connect_with_retry(kwargs, max_attempts=3):
@@ -267,12 +261,10 @@ class Client:
 
     def get(self, table_name):
         cursor = self.connection.cursor()
-        _set_savepoint(cursor)
 
         try:
             pk_column = _get_pk_column(cursor, table_name)
         except:
-            _rollback_to_savepoint(cursor)
             raise
         finally:
             cursor.close()
@@ -303,12 +295,10 @@ class Client:
     # Throw an exception if a given row already exists in the table.
     def insert_only(self, table_name, new_rows_df, reason=None):
         cursor = self.connection.cursor()
-        _set_savepoint(cursor)
         try:
             _insert_table(cursor, table_name, new_rows_df)
             _log_bulk_update(self.connection, self.username, table_name, rows_inserted=new_rows_df.shape[0], reason=reason)
         except:
-            _rollback_to_savepoint(cursor)
             raise
         finally:
             cursor.close()
@@ -317,13 +307,11 @@ class Client:
     # Throw an exception if a given row does not already exist in the table.
     def update_only(self, table_name, updated_rows_df, reason=None):
         cursor = self.connection.cursor()
-        _set_savepoint(cursor)
         try:
             pk_column = _get_pk_column(cursor, table_name)
             _update_table(cursor, table_name, pk_column, updated_rows_df)
             _log_bulk_update(self.connection, self.username, table_name, rows_updated=updated_rows_df.shape[0], reason=reason)
         except:
-            _rollback_to_savepoint(cursor)
             raise
         finally:
             cursor.close()
@@ -335,12 +323,6 @@ class Client:
         status_dict = status.add_crispr_statuses(self.connection.cursor(), status_dict)
         # convert from dict[string -> MCInfo] to dict[string -> dict]
         return {mc_id: info.to_json_dict() for mc_id, info in status_dict.items()}
-
-    def commit(self):
-        self.connection.commit()
-
-    def rollback(self):
-        self.connection.rollback()
 
     def close(self):
         with self.connection.cursor() as cursor:
