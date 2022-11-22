@@ -221,7 +221,6 @@ def _build_db_connection(config_dir):
 
     print(f"connecting to {user}@{host}:{port}/{database}")
     connection = _connect_with_retry(kwargs)
-    connection.autocommit = True
     return connection
 
 
@@ -244,6 +243,7 @@ class Client:
         sanity_check=True,
         psycopg2_connection=None,
         username=None,
+        autocommit=True
     ):
         config_dir = os.path.expanduser(config_dir)
         self.sanity_check = sanity_check
@@ -252,6 +252,7 @@ class Client:
             self.connection = _build_db_connection(config_dir)
         else:
             self.connection = psycopg2_connection
+        self.connection.autocommit = autocommit
 
         # set the username for use in audit logs
         self.username = username or os.getlogin() + " (py)"
@@ -323,6 +324,12 @@ class Client:
         status_dict = status.add_crispr_statuses(self.connection.cursor(), status_dict)
         # convert from dict[string -> MCInfo] to dict[string -> dict]
         return {mc_id: info.to_json_dict() for mc_id, info in status_dict.items()}
+
+    def commit(self):
+        self.connection.commit()
+
+    def rollback(self):
+        self.connection.rollback()
 
     def close(self):
         with self.connection.cursor() as cursor:
