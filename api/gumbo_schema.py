@@ -1,0 +1,320 @@
+from sqlpath import Schema, ForeignKey, Table
+
+schema = Schema(
+    [
+        Table(
+            name="auth_permission",
+            primary_key="id",
+            foreign_keys=[
+                ForeignKey(
+                    column_name="content_type_id",
+                    referenced_table="django_content_type",
+                )
+            ],
+        ),
+        Table(
+            name="auth_group_permissions",
+            primary_key="id",
+            foreign_keys=[
+                ForeignKey(column_name="group_id", referenced_table="auth_group"),
+                ForeignKey(
+                    column_name="permission_id", referenced_table="auth_permission"
+                ),
+            ],
+        ),
+        Table(
+            name="auth_user_groups",
+            primary_key="id",
+            foreign_keys=[
+                ForeignKey(column_name="user_id", referenced_table="auth_user"),
+                ForeignKey(column_name="group_id", referenced_table="auth_group"),
+            ],
+        ),
+        Table(
+            name="auth_user_user_permissions",
+            primary_key="id",
+            foreign_keys=[
+                ForeignKey(column_name="user_id", referenced_table="auth_user"),
+                ForeignKey(
+                    column_name="permission_id", referenced_table="auth_permission"
+                ),
+            ],
+        ),
+        Table(
+            name="django_admin_log",
+            primary_key="id",
+            foreign_keys=[
+                ForeignKey(
+                    column_name="content_type_id",
+                    referenced_table="django_content_type",
+                ),
+                ForeignKey(column_name="user_id", referenced_table="auth_user"),
+            ],
+        ),
+        Table(
+            name="omics_profile",
+            primary_key="profile_id",
+            foreign_keys=[
+                ForeignKey(
+                    column_name="baits", referenced_table="omics_profile_baits_term"
+                ),
+                ForeignKey(
+                    column_name="datatype",
+                    referenced_table="omics_profile_datatype_term",
+                ),
+                ForeignKey(
+                    column_name="flagship",
+                    referenced_table="omics_profile_flagship_term",
+                ),
+                ForeignKey(
+                    column_name="model_condition", referenced_table="model_condition"
+                ),
+                ForeignKey(
+                    column_name="owner", referenced_table="omics_profile_owner_term"
+                ),
+                ForeignKey(
+                    column_name="profile_source",
+                    referenced_table="omics_profile_profile_source_term",
+                ),
+                ForeignKey(
+                    column_name="sequence_chemistry",
+                    referenced_table="omics_profile_sequence_chemistry_term",
+                ),
+                ForeignKey(
+                    column_name="status", referenced_table="omics_profile_status_term"
+                ),
+                ForeignKey(
+                    column_name="workspace",
+                    referenced_table="omics_profile_workspace_term",
+                ),
+                ForeignKey(
+                    column_name="order_type",
+                    referenced_table="omics_profile_order_type_term",
+                ),
+            ],
+        ),
+        Table(
+            name="model_condition",
+            primary_key="model_condition_id",
+            foreign_keys=[
+                ForeignKey(
+                    column_name="cell_characteristics",
+                    referenced_table="model_condition_cell_characteristics_term",
+                ),
+                ForeignKey(
+                    column_name="cell_format",
+                    referenced_table="model_condition_cell_format_term",
+                ),
+                ForeignKey(
+                    column_name="cell_grouping",
+                    referenced_table="model_condition_cell_grouping_term",
+                ),
+                ForeignKey(
+                    column_name="cell_has_debris",
+                    referenced_table="model_condition_cell_has_debris_term",
+                ),
+                ForeignKey(
+                    column_name="cell_shape",
+                    referenced_table="model_condition_cell_shape_term",
+                ),
+                ForeignKey(
+                    column_name="cell_size",
+                    referenced_table="model_condition_cell_size_term",
+                ),
+                ForeignKey(
+                    column_name="dmx_priority",
+                    referenced_table="model_condition_dmx_priority_term",
+                ),
+                ForeignKey(
+                    column_name="freeze_media",
+                    referenced_table="model_condition_freeze_media_term",
+                ),
+                ForeignKey(
+                    column_name="media_id",
+                    referenced_table="model_condition_media_id_term",
+                ),
+                ForeignKey(column_name="model_id", referenced_table="model"),
+                ForeignKey(
+                    column_name="parent_model_condition_id",
+                    referenced_table="model_condition",
+                ),
+                ForeignKey(
+                    column_name="source", referenced_table="model_condition_source_term"
+                ),
+                ForeignKey(
+                    column_name="initials_status_pic",
+                    referenced_table="model_condition_initials_status_pic_term",
+                ),
+                ForeignKey(
+                    column_name="expansion_team",
+                    referenced_table="model_condition_expansion_team_term",
+                ),
+                ForeignKey(
+                    column_name="onboarding_str",
+                    referenced_table="model_condition_onboarding_str_term",
+                ),
+            ],
+        ),
+        Table(
+            name="model",
+            primary_key="model_id",
+            foreign_keys=[
+                ForeignKey(
+                    column_name="age_category",
+                    referenced_table="model_age_category_term",
+                ),
+                ForeignKey(
+                    column_name="growth_pattern",
+                    referenced_table="model_growth_pattern_term",
+                ),
+                ForeignKey(
+                    column_name="lineage", referenced_table="model_lineage_term"
+                ),
+                ForeignKey(
+                    column_name="molecular_subtype",
+                    referenced_table="model_molecular_subtype_term",
+                ),
+                ForeignKey(
+                    column_name="primary_disease",
+                    referenced_table="model_primary_disease_term",
+                ),
+                ForeignKey(
+                    column_name="primary_or_metastasis",
+                    referenced_table="model_primary_or_metastasis_term",
+                ),
+                ForeignKey(
+                    column_name="sample_collection_site",
+                    referenced_table="model_sample_collection_site_term",
+                ),
+                ForeignKey(column_name="sex", referenced_table="model_sex_term"),
+                ForeignKey(
+                    column_name="sub_subtype", referenced_table="model_sub_subtype_term"
+                ),
+                ForeignKey(
+                    column_name="subtype", referenced_table="model_subtype_term"
+                ),
+                ForeignKey(
+                    column_name="cell_line_received",
+                    referenced_table="model_cell_line_received_term",
+                ),
+                ForeignKey(
+                    column_name="source_type", referenced_table="model_source_type_term"
+                ),
+                ForeignKey(
+                    column_name="consent_2015",
+                    referenced_table="model_consent_2015_term",
+                ),
+                ForeignKey(
+                    column_name="geo_loc", referenced_table="model_geo_loc_term"
+                ),
+                ForeignKey(
+                    column_name="inferred_ethnicity",
+                    referenced_table="model_inferred_ethnicity_term",
+                ),
+                ForeignKey(
+                    column_name="part_of_prism",
+                    referenced_table="model_part_of_prism_term",
+                ),
+                ForeignKey(
+                    column_name="sharing_terms",
+                    referenced_table="model_sharing_terms_term",
+                ),
+                ForeignKey(
+                    column_name="stated_race", referenced_table="model_stated_race_term"
+                ),
+            ],
+        ),
+        Table(
+            name="screen_sequence",
+            primary_key="id",
+            foreign_keys=[
+                ForeignKey(
+                    column_name="screener_exclude",
+                    referenced_table="screen_sequence_screener_exclude_term",
+                ),
+                ForeignKey(
+                    column_name="snp_fingerprint",
+                    referenced_table="screen_sequence_snp_fingerprint_term",
+                ),
+                ForeignKey(
+                    column_name="str_fingerprint",
+                    referenced_table="screen_sequence_str_fingerprint_term",
+                ),
+                ForeignKey(
+                    column_name="library_subset",
+                    referenced_table="screen_sequence_library_subset_term",
+                ),
+                ForeignKey(column_name="screen_id", referenced_table="screen"),
+            ],
+        ),
+        Table(
+            name="screen",
+            primary_key="screen_id",
+            foreign_keys=[
+                ForeignKey(
+                    column_name="consortium_release_annot",
+                    referenced_table="screen_consortium_release_annot_term",
+                ),
+                ForeignKey(
+                    column_name="ibm_release_annot",
+                    referenced_table="screen_ibm_release_annot_term",
+                ),
+                ForeignKey(
+                    column_name="internal_release_annot",
+                    referenced_table="screen_internal_release_annot_term",
+                ),
+                ForeignKey(
+                    column_name="library", referenced_table="screen_library_term"
+                ),
+                ForeignKey(
+                    column_name="model_condition_id", referenced_table="model_condition"
+                ),
+                ForeignKey(
+                    column_name="public_release_annot",
+                    referenced_table="screen_public_release_annot_term",
+                ),
+                ForeignKey(
+                    column_name="screen_type",
+                    referenced_table="screen_screen_type_term",
+                ),
+                ForeignKey(
+                    column_name="screener", referenced_table="screen_screener_term"
+                ),
+                ForeignKey(
+                    column_name="screener_qc_pass",
+                    referenced_table="screen_screener_qc_pass_term",
+                ),
+                ForeignKey(
+                    column_name="crispr_screen_deliverables",
+                    referenced_table="screen_crispr_screen_deliverables_term",
+                ),
+                ForeignKey(column_name="status", referenced_table="screen_status_term"),
+                ForeignKey(
+                    column_name="substatus", referenced_table="screen_substatus_term"
+                ),
+            ],
+        ),
+        Table(
+            name="omics_sequencing",
+            primary_key="sequencing_id",
+            foreign_keys=[
+                ForeignKey(
+                    column_name="pdo_id",
+                    referenced_table="omics_sequencing_pdo_id_term",
+                ),
+                ForeignKey(column_name="profile_id", referenced_table="omics_profile"),
+                ForeignKey(
+                    column_name="sm_id", referenced_table="omics_sequencing_sm_id_term"
+                ),
+                ForeignKey(
+                    column_name="source",
+                    referenced_table="omics_sequencing_source_term",
+                ),
+                ForeignKey(
+                    column_name="expected_type",
+                    referenced_table="omics_sequencing_expected_type_term",
+                ),
+            ],
+        ),
+    ]
+)

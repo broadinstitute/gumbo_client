@@ -28,6 +28,7 @@ class Table:
 class Schema:
     "Metadata about schema needed to traverse FK relationships when translating queries to SQL"
     def __init__(self, tables: List[Table]):
+        self.tables = tables
         self.referenced_tables_by_fk = {}
         self.tables_by_name = {}
 
@@ -46,6 +47,8 @@ class Schema:
     def get_pk(self, table):
         return self.tables_by_name[table].primary_key
 
+    def __repr__(self):
+        return f"Schema({self.tables})"
 
 def _parse_path(path):
     "Given a path of the form 'table1.table2.field' turn that into ('table1', 'table2', 'field') handling whitespace and validating that path have no funny characters"

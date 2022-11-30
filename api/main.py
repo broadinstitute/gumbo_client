@@ -6,6 +6,7 @@ from fastapi import FastAPI, Depends
 from fastapi.responses import StreamingResponse
 
 from gumbo_client import Client
+import gumbo_client
 from gumbo_client.utils import NameMappingUtils
 import numpy as np
 import psycopg2
@@ -14,7 +15,8 @@ import logging
 from enum import Enum
 import pandas as pd
 
-from sqlpath import read_schema_from_postgresql, query_to_sql, make_query
+from sqlpath import query_to_sql, make_query
+from gumbo_schema import schema
 
 log = logging.getLogger(__name__)
 
@@ -56,7 +58,6 @@ def export_table(name: str, format: ExportFormat = ExportFormat.json, fields:str
     if fields == "":
         table = client.get(name)
     else:
-        schema = read_schema_from_postgresql(client.connection)
         query = make_query(name, fields)
         sql = query_to_sql(query, schema)
         table = pd.read_sql(
@@ -77,5 +78,5 @@ def export_table(name: str, format: ExportFormat = ExportFormat.json, fields:str
         response.headers["Content-Disposition"] = f"attachment; filename={name}.csv"
         return response
 
-        
+
     
