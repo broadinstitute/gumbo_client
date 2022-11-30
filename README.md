@@ -8,10 +8,10 @@ A python package for reading/writing to the gumbo database
 Install the package via:
 
 ```
-pip install .
+pip install git+https://github.com/broadinstitute/gumbo_client.git
 ```
 
-Install prerequisites and set up environment variables necessary for creating a database connection:
+If you want the client to create a database connection for you (this is likely most users), you will also need to clone the repo and run the following script to install prerequisites and set up environment variables necessary for creating a database connection:
 ```
 sh install_prereqs.sh
 ```
@@ -19,7 +19,7 @@ sh install_prereqs.sh
 
 ## Get Permission to Access the Database
 
-#### Ask for permissions in the depmap-gumbo google cloud project. 
+#### Ask Sarah Wessel (or one of the developers) for the following permissions in the depmap-gumbo google cloud project
 
 For any user to have read and write access gumbo, that user account will need to be given: 
 
@@ -73,6 +73,8 @@ Read or write from the following tables:
 - screen
 - screen_sequence
 
+The client will autocommit changes after insertions or updates.
+
 ```
 import gumbo_client
 
@@ -92,12 +94,6 @@ client.update_only("table_name", df) # throws an exception if a given row doesn'
 
 # to only insert new rows:
 client.insert_only("table_name", new_rows_df) # throws an exception if a given row already exists
-
-# after all writes are done call commit to make those changes permanent
-client.commit()
-
-# or call rollback to undo all changes since the last commit
-client.rollback()
 
 # finally, close the database connection
 client.close()
