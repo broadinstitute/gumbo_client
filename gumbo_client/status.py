@@ -47,7 +47,8 @@ class ModelStatusSummary:
 def init_status_dict(cursor, peddep_only: bool = False):
     peddep_filter = "WHERE model.peddep_line = True" if peddep_only else ""
     cursor.execute("""
-        SELECT model.model_id, model.lineage, model.peddep_subgroup FROM model {};""".format(peddep_filter))
+        SELECT model.model_id, depmap_model_type.lineage, model.peddep_subgroup FROM model
+        LEFT JOIN depmap_model_type on depmap_model_type.depmap_code = model.depmap_model_type {};""".format(peddep_filter))
     status_dict = {}
     for model_id, lineage, peddep_subgroup in cursor.fetchall():
         status_dict[model_id] = ModelStatusSummary(lineage, peddep_subgroup)
@@ -101,7 +102,7 @@ def get_crispr_status(status, screener_qc, cds_qc):
         return Status.complete
     if status=="Terminal Fail" or cds_qc_failed(cds_qc) or screener_qc_failed(screener_qc):
         return Status.failed
-    elif (cds_qc is None and screener_qc=="PASS") or (status is not None):
+    elif screener_qc=="PASS" or (status is not None):
         return Status.in_progress
     else:
         return None
