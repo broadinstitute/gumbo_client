@@ -8,12 +8,28 @@ class Status(Enum):
     in_progress = 2
     complete = 3
 
-
 status_display_name_dict = {
     Status.failed: "Failed",
     Status.in_progress: "In Progress",
     Status.complete: "Data in Portal"
 }
+
+screen_substatus_mapping_dict = {
+    'N/A':'Screen Fail - Other', 
+    'Initiation':'Fail Initiation', 
+    'not started':'Fail Initiation',
+    'Pre-screen QC':'Fail Pre-Screen QC', 
+    'Fail Prep for seq':'Fail Pre-Screen QC', 
+    'Pooled screen queue':'Fail Pre-Screen QC', 
+    'Pooled Screen Dev':'Fail Pre-Screen QC', 
+    'Cas transduction':'Fail Cas transduction'
+}
+
+
+class ScreenFailureDetails:
+    def __init__(self, failure_type: str, failed_post_data_gen: bool) -> None:
+        self.failure_type = failure_type
+        self.failed_post_data_gen = failed_post_data_gen
 
 
 # Each ModelStatusSummary object contains all of the info we need about the model
@@ -22,25 +38,27 @@ class ModelStatusSummary:
         self.lineage = lineage
         self.peddep_subgroup = peddep_subgroup
         self.statuses = {}
-        self.crispr_failure_type = None # used to determine failure type
+        self.screen_failure_details = None
     
-    def update_status(self, datatype: str, attempt_status: str, crispr_failure_type: str=None) -> None:
+    def update_status(self, datatype: str, attempt_status: str, failure_details: ScreenFailureDetails=None) -> None:
         # if we don't have a status yet, use the attempt status
         if self.statuses.get(datatype) is None: 
             self.statuses[datatype] = attempt_status
-            self.crispr_failure_type = crispr_failure_type
+            self.screen_failure_details = failure_details
         # if multiple statuses exist, determine which takes precidence 
         elif attempt_status is not None:
             new_status = attempt_status if attempt_status.value > self.statuses[datatype].value else self.statuses[datatype]
             if new_status != self.statuses[datatype]:
                 self.statuses[datatype] = new_status
-                self.crispr_failure_type = crispr_failure_type
+                self.screen_failure_details = failure_details
 
     def to_json_dict(self) -> dict:
         json = {datatype: status_display_name_dict[status_enum] for datatype, status_enum in self.statuses.items() if status_enum}
         json["lineage"] = self.lineage 
         json["peddep_subgroup"] = self.peddep_subgroup
-        json["crispr_failure_type"] = self.crispr_failure_type 
+        if self.screen_failure_details:
+            json["screen_failure_type"] = self.screen_failure_details.failure_type
+            json["screen_failed_post_data_gen"] = self.screen_failure_details.failed_post_data_gen
         return json
 
 
@@ -71,16 +89,21 @@ def add_omics_statuses(cursor, status_dict):
 
 def add_crispr_statuses(cursor, status_dict):
     cursor.execute("""
-        SELECT mc.model_id, status, substatus, screener_qc_pass, cdsqc
+        SELECT mc.model_id, status, substatus, screener_qc_pass, cdsqc, blacklist
         FROM screen
         JOIN model_condition AS mc ON screen.model_condition_id = mc.model_condition_id
-        WHERE (destination_datasets is not null and destination_datasets LIKE '%Achilles%');""")
-    for model_id, status, substatus, screener_qc, cds_qc in cursor.fetchall():
-        if status_dict.get(model_id):
-            status_dict[model_id].update_status(
-                datatype="crispr", 
-                attempt_status=get_crispr_status(status, screener_qc, cds_qc),
-                crispr_failure_type=get_crispr_failure_type(screener_qc, cds_qc, status, substatus))
+        WHERE library IN ('Avana','Humagne-CD');""")
+    for model_id, screener_status, substatus, screener_qc, cds_qc, blacklist in cursor.fetchall():
+        if status_dict.get(model_id) and not blacklist:
+            screen_status = get_screen_status(screener_status, screener_qc, cds_qc)
+            if screen_status!=Status.failed:
+                status_dict[model_id].update_status(datatype="crispr", attempt_status=screen_status)
+            else:
+                failure_details =  get_screen_failure_details(screener_qc, cds_qc, screener_status, substatus)
+                status_dict[model_id].update_status(
+                    datatype="crispr", 
+                    attempt_status=screen_status,
+                    failure_details=failure_details)
     return status_dict
 
 
@@ -97,7 +120,7 @@ def get_omics_status(profile_status, main_sequencing_id, blacklist) -> Status:
         return None
 
 
-def get_crispr_status(status, screener_qc, cds_qc):
+def get_screen_status(status, screener_qc, cds_qc):
     if screener_qc=="PASS" and cds_qc=="PASS":
         return Status.complete
     if status=="Terminal Fail" or cds_qc_failed(cds_qc) or screener_qc_failed(screener_qc):
@@ -107,13 +130,29 @@ def get_crispr_status(status, screener_qc, cds_qc):
     else:
         return None
 
-def get_crispr_failure_type(screener_qc, cds_qc, status, substatus):
-    if screener_qc_failed(screener_qc):
-        return "Screener QC Failed"
-    elif cds_qc_failed(cds_qc):
-        return "CDS QC Failed"
-    else:
-        return status
+
+# Identify the category and timing of a failure for a given screen
+# returns failure type label and failure timing label
+def get_screen_failure_details(screener_qc, cds_qc, screener_status, substatus) -> ScreenFailureDetails:
+    # Case 1. For terminally failed screens with a defined substatus
+    # ----> failure_type is the substatus, failed during screening
+    if (screener_status=='Terminal Fail') and (substatus is not None):
+        cleaned_substatus = substatus[5:] # Chop off numeric code at the beginning
+        renamed_substatus = screen_substatus_mapping_dict.get(cleaned_substatus, cleaned_substatus)
+        return ScreenFailureDetails(renamed_substatus, False)
+    # Case 2. Where the screening status is 'Done' but the screener qc failed: 
+    # ---> determine the failure type using the QC error message
+    if (screener_status=='Done') and screener_qc_failed(screener_qc):
+        if screener_qc=='FAIL - Fingerprinting':
+            return ScreenFailureDetails('Fail Fingerprinting', True)
+        else: 
+            return ScreenFailureDetails('Post-Screen Fail - Other', True)
+    # Case 3. Where screener qc is fine, but cds QC failed
+    # ---> failure_type is data QC
+    elif (screener_status=='Done') and (screener_qc=='PASS') and cds_qc_failed(cds_qc):
+        return ScreenFailureDetails('Fail Data QC', True) 
+    return ScreenFailureDetails('Other', True)
+    
 
 def screener_qc_failed(screener_qc):
     return (screener_qc is not None) and ("FAIL" in screener_qc)
