@@ -101,7 +101,4 @@ client.close()
 
 ## Running tests
 
-```
-pytest
-```
-
+In the parent gumbo_client directory, run `pytest`
