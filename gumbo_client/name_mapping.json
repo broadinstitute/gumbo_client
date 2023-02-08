@@ -200,6 +200,7 @@
 		"transfected": "Transfected"
 	},
 	"screen_sequence": {
+		"sequence_entry":"SequenceEntry",
 		"sequence_id": "SequenceID",
 		"previous_arxspan_id": "PreviousArxspanID",
 		"screen_id": "ScreenID",
@@ -215,7 +216,7 @@
 		"str_result_file": "STRResultFile",
 		"str_query_name": "STRQueryName",
 		"cds_exclude": "CDSExclude",
-		"cds_rep_qc": "CDSRepQC",
+		"cds_sep_qc": "CDSRepQC",
 		"exclusion_notes": "ExclusionNotes"
 	},
 	"screen_qc":{
@@ -223,23 +224,26 @@
 		"screen_nnmd":"ScreenNNMD", 
 		"screen_rocauc":"ScreenROCAUC", 
 		"screen_fpr":"ScreenFPR",
-		"screen_mean_essential_depletion":"ScreenMeanEssentialDepletion", 
-		"screen_mean_nonessential_depletion":"ScreenMeanNonessentialDepletion",
-		"screen_std_essentials":"ScreenSTDEssentials", 
-		"screen_std_nonessentials":"ScreenSTDNonessentials", 
+		"screen_median_essential_depletion":"ScreenMedianEssentialDepletion", 
+		"screen_median_nonessential_depletion":"ScreenMedianNonessentialDepletion",
+		"screen_mad_essentials":"ScreenMADEssentials", 
+		"screen_mad_nonessentials":"ScreenMADNonessentials", 
 		"passes_qc":"PassesQC",
 		"can_include":"CanInclude", 
 		"qc_status":"QCStatus", 
 		"has_copy_number":"HasCopyNumber", 
 		"n_passing_sequences":"nPassingSequences",
-		"n_included_sequences":"nIncludedSequences"
+		"n_included_sequences":"nIncludedSequences",
+		"screen_not_blacklisted":"ScreenNotBlacklisted",
+		"screen_permission_to_release":"ScreenPermissionToRelease"
 	},
 	"screen_sequence_qc":{
-		"id":"id", 
+		"sequence_entry":"SequenceEntry", 
 		"sequence_id":"SequenceID", 
+		"release_sequence_id":"ReleaseSequenceID",
 		"sequence_fingerprint_pass":"SequenceFingerprintPass",
 		"sequence_total_reads":"SequenceTotalReads", 
-		"sequence_mean_reads_per_guide":"SequenceMeanReadsPerGuide",
+		"sequence_median_reads_per_guide":"SequenceMeanReadsPerGuide",
 		"sequence_nnmd":"SequenceNNMD", 
 		"passes_qc":"PassesQC", 
 		"can_include":"CanInclude", 
