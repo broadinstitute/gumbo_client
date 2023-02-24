@@ -1,5 +1,4 @@
 from gumbo_client import status
-import pandas as pd
 
 
 def test_get_screen_status():

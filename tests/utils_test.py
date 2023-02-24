@@ -1,4 +1,4 @@
-import gumbo_client.utils as utils
+from gumbo_client import utils
 import pandas as pd
 
 
