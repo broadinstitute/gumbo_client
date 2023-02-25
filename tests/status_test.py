@@ -1,10 +1,10 @@
 from gumbo_client import status
-from datetime import datetime
+from datetime import date
 
 
 def test_get_screen_status():
-    past_date = datetime(2020, 1, 1)
-    future_date = datetime(2050, 1, 1)
+    past_date = date(2020, 1, 1)
+    future_date = date(2050, 1, 1)
     # Complete
     assert status.get_screen_status(status=None, screener_qc="PASS", cds_qc="PASS", consortium_release_date=past_date) == status.Status.complete 
     assert status.get_screen_status(status="Done", screener_qc="PASS", cds_qc="PASS", consortium_release_date=past_date) == status.Status.complete 
@@ -23,7 +23,7 @@ def test_get_screen_status():
 
 
 def test_get_omics_status():
-    past_date = datetime(2020, 1, 1)
+    past_date = date(2020, 1, 1)
     # Complete
     assert status.get_omics_status(profile_status="Complete", main_sequencing_id="SomeIdVal", blacklist=None, consortium_release_date=past_date) == status.Status.complete
     # In Progress

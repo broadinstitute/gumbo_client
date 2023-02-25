@@ -1,5 +1,5 @@
 from enum import Enum
-from datetime import datetime
+from datetime import date
 
 
 # All possible statuses, in order of precidence
@@ -109,7 +109,7 @@ def add_crispr_statuses(cursor, status_dict):
 
 
 def get_omics_status(profile_status, main_sequencing_id, blacklist, consortium_release_date) -> Status:
-    is_released = (consortium_release_date is not None) and (consortium_release_date < datetime.today())
+    is_released = (consortium_release_date is not None) and (consortium_release_date < date.today())
     if blacklist:
         return Status.failed
     elif main_sequencing_id is not None and is_released:
@@ -123,7 +123,7 @@ def get_omics_status(profile_status, main_sequencing_id, blacklist, consortium_r
 
 
 def get_screen_status(status, screener_qc, cds_qc, consortium_release_date):
-    is_released = (consortium_release_date is not None) and (consortium_release_date < datetime.today())
+    is_released = (consortium_release_date is not None) and (consortium_release_date < date.today())
     if screener_qc=="PASS" and cds_qc=="PASS" and is_released:
         return Status.complete
     if status=="Terminal Fail" or cds_qc_failed(cds_qc) or screener_qc_failed(screener_qc):
