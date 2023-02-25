@@ -1,4 +1,5 @@
 from enum import Enum
+from datetime import datetime
 
 
 # All possible statuses, in order of precidence
@@ -76,26 +77,26 @@ def init_status_dict(cursor, peddep_only: bool = False):
 def add_omics_statuses(cursor, status_dict):
     for datatype in ["wgs", "rna"]:
         cursor.execute(f"""
-            SELECT mc.model_id, status, main_sequencing_id, blacklist_omics FROM omics_profile
+            SELECT mc.model_id, status, main_sequencing_id, blacklist_omics, consortium_release_date FROM omics_profile
             JOIN model_condition AS mc ON model_condition = mc.model_condition_id
             WHERE omics_profile.datatype='{datatype}';""")
-        for model_id, status, main_sequencing_id, blacklist in cursor.fetchall():
+        for model_id, status, main_sequencing_id, blacklist, consortium_release_date in cursor.fetchall():
             if status_dict.get(model_id):
                 status_dict[model_id].update_status(
                     datatype=datatype, 
-                    attempt_status=get_omics_status(status, main_sequencing_id, blacklist))
+                    attempt_status=get_omics_status(status, main_sequencing_id, blacklist, consortium_release_date))
     return status_dict
 
 
 def add_crispr_statuses(cursor, status_dict):
     cursor.execute("""
-        SELECT mc.model_id, status, substatus, screener_qc_pass, cdsqc, blacklist
+        SELECT mc.model_id, status, substatus, screener_qc_pass, cdsqc, blacklist, consortium_release_date
         FROM screen
         JOIN model_condition AS mc ON screen.model_condition_id = mc.model_condition_id
         WHERE library IN ('Avana','Humagne-CD');""")
-    for model_id, screener_status, substatus, screener_qc, cds_qc, blacklist in cursor.fetchall():
+    for model_id, screener_status, substatus, screener_qc, cds_qc, blacklist, consortium_release_date in cursor.fetchall():
         if status_dict.get(model_id) and not blacklist:
-            screen_status = get_screen_status(screener_status, screener_qc, cds_qc)
+            screen_status = get_screen_status(screener_status, screener_qc, cds_qc, consortium_release_date)
             if screen_status!=Status.failed:
                 status_dict[model_id].update_status(datatype="crispr", attempt_status=screen_status)
             else:
@@ -107,10 +108,11 @@ def add_crispr_statuses(cursor, status_dict):
     return status_dict
 
 
-def get_omics_status(profile_status, main_sequencing_id, blacklist) -> Status:
+def get_omics_status(profile_status, main_sequencing_id, blacklist, consortium_release_date) -> Status:
+    is_released = (consortium_release_date is not None) and (consortium_release_date < datetime.today())
     if blacklist:
         return Status.failed
-    elif main_sequencing_id is not None:
+    elif main_sequencing_id is not None and is_released:
         return Status.complete
     elif profile_status is not None and "Abandoned" in profile_status:
         return Status.failed
@@ -120,8 +122,9 @@ def get_omics_status(profile_status, main_sequencing_id, blacklist) -> Status:
         return None
 
 
-def get_screen_status(status, screener_qc, cds_qc):
-    if screener_qc=="PASS" and cds_qc=="PASS":
+def get_screen_status(status, screener_qc, cds_qc, consortium_release_date):
+    is_released = (consortium_release_date is not None) and (consortium_release_date < datetime.today())
+    if screener_qc=="PASS" and cds_qc=="PASS" and is_released:
         return Status.complete
     if status=="Terminal Fail" or cds_qc_failed(cds_qc) or screener_qc_failed(screener_qc):
         return Status.failed
