@@ -243,7 +243,7 @@
 		"release_sequence_id":"ReleaseSequenceID",
 		"sequence_fingerprint_pass":"SequenceFingerprintPass",
 		"sequence_total_reads":"SequenceTotalReads", 
-		"sequence_median_reads_per_guide":"SequenceMeanReadsPerGuide",
+		"sequence_mean_reads_per_guide":"SequenceMeanReadsPerGuide",
 		"sequence_nnmd":"SequenceNNMD", 
 		"passes_qc":"PassesQC", 
 		"can_include":"CanInclude", 
