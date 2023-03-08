@@ -1,4 +1,0 @@
-numpy==1.23.1
-pandas==1.4.3
-psycopg2==2.9.3
-pytest==7.1.2
