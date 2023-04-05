@@ -3,7 +3,7 @@
 A python package for reading/writing to the gumbo database
 
 
-## Installation
+## Installations
 
 Install the package via:
 
@@ -11,11 +11,29 @@ Install the package via:
 pip install git+https://github.com/broadinstitute/gumbo_client.git
 ```
 
-If you want the client to create a database connection for you (this is likely most users), you will also need to clone the repo and run the following script to install prerequisites and set up environment variables necessary for creating a database connection:
+Note: some Mac M1 users have trouble installing the `psycopg2` python package required by this library. We have hopefully addressed this issue by switching to a variant called `psycopg2-binary`. If you have trouble installing either of these packages, feel free to reach out to Sarah Wessel for help.
+
+### Authenticating with your Google Credentials
+
+If you want the client to create a database connection for you (this is the case for most users), you will also need to run the following bash commands to so that the client can use your google credentials to authenticate through the database's proxy. 
+
+For MacOS 64-bit users:
 ```
-sh install_prereqs.sh
+curl -o cloud_sql_proxy https://dl.google.com/cloudsql/cloud_sql_proxy.darwin.amd64
+chmod +x cloud_sql_proxy
+sudo mv cloud_sql_proxy /usr/local/bin
 ```
 
+For Mac M1 users: 
+```
+curl -o cloud_sql_proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.1.2/cloud-sql-proxy.darwin.arm64
+chmod +x cloud_sql_proxy
+sudo mv cloud_sql_proxy /usr/local/bin
+```
+
+You can learn more about the Cloud SQL Proxy [here](https://cloud.google.com/sql/docs/mysql/sql-proxy). 
+
+You will also need to make sure you have the `gcloud` cli tool installed and authenticated with your broad google account (more info [here](https://cloud.google.com/sql/docs/mysql/connect-auth-proxy#credentials-from-an-authenticated-gcloud-cli-client.)).
 
 ## Get Permission to Access the Database
 
@@ -33,7 +51,7 @@ For read-only access, the user will need to be given:
 
 #### Create a directory with the database connection information and keys:
 
-The secrets and configs you use will depend on the type access you want:
+The secrets and configs you use will depend on the type access you want (you can configure multiple and switch between):
 
 
 - For read and write access to the production database:
