@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "gumbo-client"
-version = "0.2.3"
+version = "0.2.4"
 description = ""
 authors = ["Sarah Wessel <swessel@broadinstitute.org>"]
 readme = "README.md"

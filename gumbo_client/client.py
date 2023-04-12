@@ -260,20 +260,22 @@ class Client:
             print("setting username to", self.username)
             cursor.execute("SET my.username=%s", [self.username])
 
+
     def get(self, table_name):
         cursor = self.connection.cursor()
+        select_query = f"select * from {table_name}"
 
+        # If a primary key exists, use it to sort the table
+        # Views don't have primary keys to use here, and that's fine.
         try:
             pk_column = _get_pk_column(cursor, table_name)
-        except:
-            raise
+            select_query += f" order by {pk_column}"
+        except AssertionError:
+            pass
         finally:
             cursor.close()
+        return pd.read_sql(select_query, self.connection)
 
-        df = pd.read_sql(
-            f"select * from {table_name} order by {pk_column}", self.connection
-        )
-        return df
 
     def update(self, table_name, new_df, delete_missing_rows=False, reason=None):
         cur_df = self.get(table_name)
