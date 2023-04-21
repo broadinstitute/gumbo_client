@@ -3,3 +3,4 @@ pandas==1.4.1
 uvicorn==0.21.1
 psycopg2-binary==2.9.5
 python-dotenv==0.20.0
+google-auth==2.17.3

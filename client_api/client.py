@@ -4,7 +4,7 @@ import os
 import pandas as pd
 from psycopg2.extras import execute_batch, execute_values
 
-from . import status
+import status
 
 
 def _reconcile(pk_column, existing_table, target_table):
@@ -173,7 +173,6 @@ class Client:
         username=None,
         autocommit=True
     ):
-        config_dir = os.path.expanduser(config_dir)
         self.sanity_check = sanity_check
         self.connection = psycopg2_connection
         self.connection.autocommit = autocommit
