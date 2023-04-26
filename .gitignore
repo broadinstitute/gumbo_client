@@ -7,3 +7,4 @@ gumbo_client.egg-info
 __pycache__
 build/
 .env
+client_api/app.yaml

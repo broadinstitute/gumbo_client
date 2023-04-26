@@ -1,17 +1,33 @@
 import requests
+import subprocess
 import urllib
 
 import pandas as pd
+import os
 
-url = 'http://localhost:8000'
+url = 'https://client-api-dot-depmap-gumbo.uc.r.appspot.com'
+
+
+class BearerAuth(requests.auth.AuthBase):
+    def __init__(self, token):
+        self.token = token
+    def __call__(self, r):
+        r.headers["Authorization"] = "Bearer " + self.token
+        return r
+
 
 class Client:
     def __init__(self):
-        pass
+        output_stream = os.popen("gcloud auth print-access-token")
+        self.token = output_stream.read().strip()
 
     def get(self, table_name: str) -> pd.DataFrame:
-        response = requests.get(f'{url}/table/{table_name}').json()
-        return pd.read_json(response)
+        # response = requests.get(f'{url}/table/{table_name}', auth=BearerAuth(self.token))
+        response = requests.get(f'{url}/table/{table_name}', headers={"Authorization": f"Bearer {self.token}"})
+        # TODO: debug why I'm getting 401 instead of 403 (I should be forbidden, not unauthorized)
+        # TODO: I see online that access tokens are usually used as bearer tokens, but Googles example uses an OIDC token - why?
+        response.raise_for_status()
+        return pd.read_json(response.json())
 
     def update(self, table_name, new_df, delete_missing_rows=False, reason=None):
         pass
