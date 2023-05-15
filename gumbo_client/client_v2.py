@@ -1,31 +1,28 @@
 import requests
-import subprocess
-import urllib
+from google.oauth2 import service_account
+from google.auth.transport.requests import AuthorizedSession
 
 import pandas as pd
-import os
 
-url = 'https://client-api-dot-depmap-gumbo.uc.r.appspot.com'
-
-
-class BearerAuth(requests.auth.AuthBase):
-    def __init__(self, token):
-        self.token = token
-    def __call__(self, r):
-        r.headers["Authorization"] = "Bearer " + self.token
-        return r
+base_url = 'https://client-api-dot-depmap-gumbo.uc.r.appspot.com'
+client_id_filename = './secrets/iap_client_id.txt'
+credentials_filename = './secrets/depmap-gumbo-service-account.json'
 
 
 class Client:
     def __init__(self):
-        output_stream = os.popen("gcloud auth print-access-token")
-        self.token = output_stream.read().strip()
+        # Read secrets from file 
+        with open(client_id_filename, 'r') as file:
+            client_id = file.read().rstrip()
+        creds = service_account.IDTokenCredentials.from_service_account_file(
+            credentials_filename,
+            target_audience=client_id)
+        # Get an authed session token 
+        self.authed_session = AuthorizedSession(creds)
 
     def get(self, table_name: str) -> pd.DataFrame:
-        # response = requests.get(f'{url}/table/{table_name}', auth=BearerAuth(self.token))
-        response = requests.get(f'{url}/table/{table_name}', headers={"Authorization": f"Bearer {self.token}"})
-        # TODO: debug why I'm getting 401 instead of 403 (I should be forbidden, not unauthorized)
-        # TODO: I see online that access tokens are usually used as bearer tokens, but Googles example uses an OIDC token - why?
+        url = f'{base_url}/table/{table_name}'
+        response = self.authed_session.request("GET", url)
         response.raise_for_status()
         return pd.read_json(response.json())
 
