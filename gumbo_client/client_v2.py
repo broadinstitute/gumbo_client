@@ -1,21 +1,22 @@
-import requests
+import os
 from google.oauth2 import service_account
 from google.auth.transport.requests import AuthorizedSession
 
 import pandas as pd
 
 base_url = 'https://client-api-dot-depmap-gumbo.uc.r.appspot.com'
-client_id_filename = './secrets/iap_client_id.txt'
-credentials_filename = './secrets/depmap-gumbo-service-account.json'
+gumbo_configs_dir = os.path.expanduser('~') + "/.config/gumbo/"
+client_id_filename = 'iap_client_id.txt'
+credentials_filename = 'client-iap-auth-sa.json'
 
 
 class Client:
     def __init__(self):
         # Read secrets from file 
-        with open(client_id_filename, 'r') as file:
+        with open(gumbo_configs_dir + client_id_filename, 'r') as file:
             client_id = file.read().rstrip()
         creds = service_account.IDTokenCredentials.from_service_account_file(
-            credentials_filename,
+            gumbo_configs_dir + credentials_filename,
             target_audience=client_id)
         # Get an authed session token 
         self.authed_session = AuthorizedSession(creds)

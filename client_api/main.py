@@ -24,6 +24,9 @@ async def get_table(table_name: str):
     # TODO: return 404 if table doesn't exist
 
 # Notes on rewrite:
-# - not sure it makes sense to enable transactions (turning off autocommit) with this rewrite
-# - no use in having a "close" function when it's making api requests
-# - probably better to just change the api and call it a new thing to avoid confusion
+# - Not sure it makes sense to enable transactions (turning off autocommit) with this rewrite
+#   - no use in having a "close" function when it's making api requests
+#   - probably best to depricate these functions and give a warning when they're used
+# - Also, I'm not sure how we'll do read-only credentials with this setup
+#   - could we make a second service account that only has access to GET endpoints? Is this possible? 
+#   - or just make a readonly flag on the client constructor? 
