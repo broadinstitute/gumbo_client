@@ -159,7 +159,7 @@ def _update(connection, table_name, cur_df, new_df, username, delete_missing_row
     finally:
         cursor.close()
     print(
-        f"Inserted {len(new_rows)} rows, updated {len(updated_rows)} rows, and deleted {len(removed_rows)} rows"
+        f"Inserted {len(new_rows)} rows, updated {len(updated_rows)} rows, and deleted {len(deleted_row_count)} rows"
     )
 
 
