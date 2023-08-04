@@ -36,7 +36,7 @@ def alloc_free_port(start_port, max_tries=20):
     raise Exception(f"Could not find free port in range {port}-{port+max_tries}")
 
 
-def wait_until_port_listening(port, timeout=10):
+def wait_until_port_listening(port, timeout=20):
     start_time = time.time()
     while True:
         now = time.time()
