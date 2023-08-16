@@ -17,18 +17,11 @@ Note: some Mac M1 users have trouble installing the `psycopg2` python package re
 
 If you want the client to create a database connection for you (this is the case for most users), you will also need to run the following bash commands to so that the client can use your google credentials to authenticate through the database's proxy. 
 
-For MacOS 64-bit users:
+For MacOS users (M1 macs can run the AMD or ARM binary):
 ```
-curl -o cloud_sql_proxy https://dl.google.com/cloudsql/cloud_sql_proxy.darwin.amd64
-chmod +x cloud_sql_proxy
-sudo mv cloud_sql_proxy /usr/local/bin
-```
-
-For Mac M1 users: 
-```
-curl -o cloud_sql_proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.1.2/cloud-sql-proxy.darwin.arm64
-chmod +x cloud_sql_proxy
-sudo mv cloud_sql_proxy /usr/local/bin
+  curl 'https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.6.0/cloud-sql-proxy.darwin.amd64' --output cloud-sql-proxy-v2.6.0
+  chmod +x cloud-sql-proxy-v2.6.0
+  sudo mv cloud-sql-proxy-v2.6.0 cloud-sql-proxy-v2.6.0
 ```
 
 You can learn more about the Cloud SQL Proxy [here](https://cloud.google.com/sql/docs/mysql/sql-proxy). 

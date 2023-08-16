@@ -3,7 +3,7 @@ import socket
 import os
 import json
 import time
-
+import re
 
 def is_pid_valid(pid):
     "returns True if there exists a process with the given PID"
@@ -74,13 +74,24 @@ def get_cloud_sql_proxy_port(pid_file, instance):
 
     port = alloc_free_port(5432)
     print(f"Starting cloud_sql_proxy for {instance} listening on port {port}")
-    command = ["cloud_sql_proxy", f"-instances={instance}=tcp:{port}"]
+
+    cloud_sql_proxy_version = "2.6.0"
+    cloud_sql_proxy_exe = f"cloud-sql-proxy-v{cloud_sql_proxy_version}"
+    command = [cloud_sql_proxy_exe, "--version"]
+
     try:
-        proc = subprocess.Popen(command)
+        result = subprocess.run(command, check=True, capture_output=True)
     except FileNotFoundError as ex:
         raise Exception(
             "Failed to execute {command}. Have you run 'sh install_prereqs.sh' which should install cloud_sql_proxy in your path?"
         )
+    version_output = result.stdout.decode("utf8")
+    m = re.match("\\S+ version ([^+]+).*", version_output)
+    assert m is not None, f"Could not parse version from running {command}: {version_output}"
+    assert m.group(1) == cloud_sql_proxy_version, f"Exepected version to be {cloud_sql_proxy_version} but was {m.group(1)}"
+
+    command = [cloud_sql_proxy_exe, instance, "-p", f"{port}"]
+    proc = subprocess.Popen(command)
     wait_until_port_listening(port)
     with open(pid_file, "wt") as fd:
         fd.write(json.dumps({"pid": proc.pid, "port": port}))
