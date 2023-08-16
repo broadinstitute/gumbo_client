@@ -26,7 +26,11 @@ For MacOS users (M1 macs can run the AMD or ARM binary):
 
 You can learn more about the Cloud SQL Proxy [here](https://cloud.google.com/sql/docs/mysql/sql-proxy). 
 
-You will also need to make sure you have the `gcloud` cli tool installed and authenticated with your broad google account (more info [here](https://cloud.google.com/sql/docs/mysql/connect-auth-proxy#credentials-from-an-authenticated-gcloud-cli-client.)).
+You will also need to make sure you have the `gcloud` CLI tool installed and setup to use your broad google account as the "application default" (more info [here](https://cloud.google.com/sql/docs/mysql/connect-auth-proxy#credentials-from-an-authenticated-gcloud-cli-client.)). If you already have the gcloud CLI tool, simply run:
+```
+gcloud auth application-default login
+```
+
 
 ## Get Permission to Access the Database
 
