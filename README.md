@@ -21,7 +21,7 @@ For MacOS users (M1 macs can run the AMD or ARM binary):
 ```
   curl 'https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.6.0/cloud-sql-proxy.darwin.amd64' --output cloud-sql-proxy-v2.6.0
   chmod +x cloud-sql-proxy-v2.6.0
-  sudo mv cloud-sql-proxy-v2.6.0 cloud-sql-proxy-v2.6.0
+  sudo mv cloud-sql-proxy-v2.6.0 /usr/local/bin/cloud-sql-proxy-v2.6.0
 ```
 
 You can learn more about the Cloud SQL Proxy [here](https://cloud.google.com/sql/docs/mysql/sql-proxy). 
