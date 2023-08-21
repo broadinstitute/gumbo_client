@@ -22,9 +22,36 @@ Ask Sarah Wessel (or one of the developers) for the following permissions in the
 
 You will need to make sure you have the `gcloud` cli tool installed and authenticated with your broad google account (more info [here](https://cloud.google.com/sql/docs/mysql/connect-auth-proxy#credentials-from-an-authenticated-gcloud-cli-client.)).
 
+For MacOS users (M1 macs can run the AMD or ARM binary):
+```
+  curl 'https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.6.0/cloud-sql-proxy.darwin.amd64' --output cloud-sql-proxy-v2.6.0
+  chmod +x cloud-sql-proxy-v2.6.0
+  sudo mv cloud-sql-proxy-v2.6.0 /usr/local/bin/cloud-sql-proxy-v2.6.0
+```
+
+You can learn more about the Cloud SQL Proxy [here](https://cloud.google.com/sql/docs/mysql/sql-proxy). 
+
+You will also need to make sure you have the `gcloud` CLI tool installed and setup to use your broad google account as the "application default" (more info [here](https://cloud.google.com/sql/docs/mysql/connect-auth-proxy#credentials-from-an-authenticated-gcloud-cli-client.)). If you already have the gcloud CLI tool, simply run:
+```
+gcloud auth application-default login
+```
 
 
-#### Read connection secrets from Google Secrets Manager:
+## Get Permission to Access the Database
+
+#### Ask Sarah Wessel (or one of the developers) for the following permissions in the depmap-gumbo google cloud project
+
+For any user to have read and write access gumbo, that user account will need to be given: 
+
+- Cloud SQL Client
+- Secret Manager Secret Accessor
+
+For read-only access, the user will need to be given:
+
+- Cloud SQL Client
+- Viewer access for the `gumbo-client-readonly-config` secret in Secrets Manager
+
+#### Create a directory with the database connection information and keys:
 
 The secrets and configs you use will depend on the type access you want (you can configure multiple and switch between):
 
@@ -94,3 +121,19 @@ client.close()
 ## Running tests
 
 In the parent gumbo_client directory, run `pytest`
+
+## Debugging Setup Errors
+
+Most of the errors people encounter setting up the client are related to the connection it creates with the database. 
+Behind the scenes, the client uses the google credentials you have saved in the gcloud cli tool to validate your identity with 
+GCP, which hosts the Gumbo database. In order to do this, the client is starts a service called the Cloud SQL Proxy which 
+relays requests to Google and signs them with your google credentials.
+
+Steps for debugging:
+1. If you have the Broad VPN turned on, disconnect and try the client again. The VPN sometimes randomly interferes with requests made to GCP. 
+2. If that doesn't work, try to get a more specific error message by running the proxy directly. If you've followed the setup steps, 
+the executable file that runs the proxy should be located at `/usr/local/bin/cloud_sql_proxy`. You should be able to run it with one of the following commands 
+(depending on your version):
+    * Older versions of the proxy: `/usr/local/bin/cloud_sql_proxy -instances=depmap-gumbo:us-central1:gumbo-cloudsql=tcp:5432`
+    * Newer versions of the proxy: `/usr/local/bin/cloud_sql_proxy "depmap-gumbo:us-central1:gumbo-cloudsql?port=5432"`
+3. If you're still running into problems, reach out to someone on the software team for help (Nayeem or Sarah might be most able to help).
