@@ -1,10 +1,6 @@
-test-data/
-.ipynb_checkpoints/
-dist
-gumbo_client/__pycache__
-*~
-gumbo_client.egg-info
 __pycache__
-build/
+gumbo_client.egg-info
+
 .env
 client_api/app.yaml
+client_api/secrets/
