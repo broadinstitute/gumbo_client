@@ -4,12 +4,13 @@ from fastapi import FastAPI
 from dotenv import load_dotenv, find_dotenv
 import psycopg2
 
-from client import Client
+from data_access.gumbo_data_access import GumboDAO
+
 
 load_dotenv(find_dotenv())
 connection_string = os.environ["GUMBO_CONNECTION_STRING"]
 db_connection = psycopg2.connect(connection_string)
-client = Client(
+client = GumboDAO(
     psycopg2_connection=db_connection, 
     sanity_check=True, 
     username="TEMPORARY", autocommit=True
