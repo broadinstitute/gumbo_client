@@ -57,12 +57,18 @@ def _reconcile(pk_column, existing_table, target_table):
 
 
 def _to_pythonic_type(x):
-    # if the type is a numpy type it'll have an item() method for converting to a native python type
+    """Convert values to pythonic hashable types"""
     if type(x) == dict:
         return {k: _to_pythonic_type(v) for k, v in x.items()}
+    if type(x) == list:
+        # lists are converted to strings here because 
+        # 1) lists aren't hashable and 
+        # 2) that's the only way psycopg2 is able to handle them
+        return  str([_to_pythonic_type(val) for val in x])
     if pd.isna(x):
         return None
     if hasattr(x, "item"):
+        # if the type is a numpy type it'll have an item() method for converting to a native python type
         x = x.item()
     return x
 
@@ -120,8 +126,12 @@ def _assert_dataframes_match(a, b):
     #     ).all(), f'Sanity check failed: After update column "{col}" was different then expected: {new_df[col][~matches]} != {final_df[col][~matches]}'
 
 def _assert_has_subset_of_rows(subset_df, full_df):
-    assert (subset_df.columns == full_df.columns).all()
-    assert len(subset_df.merge(full_df)) == len(subset_df)
+    # Convert dataframe values to hashable types
+    full_pythonic_df = full_df.applymap(_to_pythonic_type)
+    subset_pythonic_df = subset_df.applymap(_to_pythonic_type)
+    
+    assert (subset_pythonic_df.columns == full_pythonic_df.columns).all()
+    assert len(subset_pythonic_df.merge(full_pythonic_df)) == len(subset_pythonic_df)
 
 # taken from https://wiki.postgresql.org/wiki/Retrieve_primary_key_columns
 PRIMARY_KEY_QUERY = """SELECT a.attname, format_type(a.atttypid, a.atttypmod) AS data_type
