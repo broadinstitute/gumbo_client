@@ -1,15 +1,21 @@
 # Gumbo Client API
 
-### For local development:
+An API which handles requests from the v2 gumbo client.
 
-```pip install -r requirements.txt```
+This API currently only supports GET requests for gumbo table data, but will be expanded over time to support more operations.
 
-To Authenticate to this API: 
+## Running the API locally
 
-run on bash: `gcloud auth application-default login`
-Then in python:
 ```
-import google.auth
-credentials, project = google.auth.default()
-... (make a request using the credentials)
+pip install -r requirements.txt
+python main.py runserver
 ```
+
+# Deploying changes
+```
+# read the App Engine deployment configs from Secerets Manager
+gcloud secrets versions access latest --secret='client-api-deployment-yaml' --project depmap-gumbo > app.yaml
+
+# Deploy to App Engine
+gcloud app deploy
+``

@@ -11,16 +11,11 @@ Install the package via:
 pip install git+https://github.com/broadinstitute/gumbo_client.git
 ```
 
-## Get Permission to Access the Database
-
-Ask Sarah Wessel (or one of the developers) for the following permissions in the depmap-gumbo google cloud project:
-
-- Secret Manager Secret Accessor
-
+Note: some Mac M1 users have trouble installing the `psycopg2` python package required by this library. We have hopefully addressed this issue by switching to a variant called `psycopg2-binary`. If you have trouble installing either of these packages, feel free to reach out to Sarah Wessel for help.
 
 ### Authenticating with your Google Credentials
 
-You will need to make sure you have the `gcloud` cli tool installed and authenticated with your broad google account (more info [here](https://cloud.google.com/sql/docs/mysql/connect-auth-proxy#credentials-from-an-authenticated-gcloud-cli-client.)).
+If you want the client to create a database connection for you (this is the case for most users), you will also need to run the following bash commands to so that the client can use your google credentials to authenticate through the database's proxy. 
 
 For MacOS users (M1 macs can run the AMD or ARM binary):
 ```
@@ -59,24 +54,25 @@ The secrets and configs you use will depend on the type access you want (you can
 - For read and write access to the production database:
     ```
     mkdir -p ~/.config/gumbo
-    gcloud secrets versions access latest --secret='client-iap-client-id' --project depmap-gumbo > ~/.config/gumbo/iap_client_id.txt
-    gcloud secrets versions access latest --secret='client-iap-auth-sa-json' --project depmap-gumbo > ~/.config/gumbo/client-iap-auth-sa.json
+    gcloud secrets versions access latest --secret='gumbo-client-config' --project depmap-gumbo > ~/.config/gumbo/config.json
     ```
 
 - For read-only access to the production database:
     ```
-    ...
+    mkdir -p ~/.config/gumbo-read-only
+    gcloud secrets versions access latest --secret='gumbo-client-readonly-config' --project depmap-gumbo > ~/.config/gumbo-read-only/config.json
     ```
 
 - For read and write access to the staging database:
     ```
-    ...
+    mkdir -p ~/.config/gumbo-staging
+    gcloud secrets versions access latest --secret='gumbo-staging-client-config' --project depmap-gumbo > ~/.config/gumbo-staging/config.json
     ```
 
 #### Then specify your config file location when you initialize the client:
 
 ```
-client = gumbo_client.Client(username="firstInitialLastName")
+client = gumbo_client.Client(config_dir="~/.config/gumbo-read-only", username="firstInitialLastName")
 ```
 
 And you should be good to go! :tada:
@@ -137,3 +133,27 @@ the executable file that runs the proxy should be located at `/usr/local/bin/clo
     * Older versions of the proxy: `/usr/local/bin/cloud_sql_proxy -instances=depmap-gumbo:us-central1:gumbo-cloudsql=tcp:5432`
     * Newer versions of the proxy: `/usr/local/bin/cloud_sql_proxy "depmap-gumbo:us-central1:gumbo-cloudsql?port=5432"`
 3. If you're still running into problems, reach out to someone on the software team for help (Nayeem or Sarah might be most able to help).
+
+
+# Version 2 (in Beta)
+Version 2 of the gumbo client is slowly being developed and released, with the goal of simplifying the database connection. From the users perspective this just means:
+1. Simpler setup (no need to download the proxy, and debug differing versions)
+2. No need for the client to launch a separate task in the background
+3. Fewer connection errors 
+
+Currently, this version only supports _reading_ from the gumbo database, but we're hoping to eventually fully replace the functionality of the old client.
+
+To setup the connection for v2, simply run:
+```
+gcloud secrets versions access latest --secret='client-iap-client-id' --project depmap-gumbo > ~/.config/gumbo/iap_client_id.txt
+gcloud secrets versions access latest --secret='client-iap-auth-sa-json' --project depmap-gumbo > ~/.config/gumbo/client-iap-auth-sa.json
+```
+And you should be ready to go!
+
+To use the v2 client, import `client_v2` instead of `client` and then use it as you normally would to read tables. For example:
+```
+import client_v2
+
+client = client_v2.Client()
+df = client.get("depmap_model_type")
+```
