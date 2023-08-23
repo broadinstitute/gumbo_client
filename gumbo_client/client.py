@@ -32,7 +32,7 @@ def _reconcile(pk_column, existing_table, target_table):
 
     # convert rows to dicts and index by primary key
     existing_rows = {
-        row[pk_column]: _to_pythonic_type(row)
+        row[pk_column]: _to_pythonic_hashable_types(row)
         for row in existing_table.to_dict("records")
     }
     new_rows = []
@@ -41,7 +41,7 @@ def _reconcile(pk_column, existing_table, target_table):
 
     for row in target_table.to_dict("records"):
         # is this a new row or row in need of updating?
-        row = _to_pythonic_type(row)
+        row = _to_pythonic_hashable_types(row)
         id = row[pk_column]
         if id in existing_rows:
             pks_to_keep.append(id)
@@ -56,13 +56,23 @@ def _reconcile(pk_column, existing_table, target_table):
     return pd.DataFrame(new_rows), updated_rows, to_delete
 
 
-def _to_pythonic_type(x):
-    # if the type is a numpy type it'll have an item() method for converting to a native python type
-    if type(x) == dict:
-        return {k: _to_pythonic_type(v) for k, v in x.items()}
+def _to_pythonic_hashable_types(row: dict):
+    """Convert a row of values to pythonic hashable types"""
+    if type(row) == dict:
+        return {k: _to_pythonic_hashable_type(v) for k, v in row.items()}
+
+
+def _to_pythonic_hashable_type(x):
+    """Convert a single value to a pythonic hashable type that can be handled by the database"""
+    if type(x) == list:
+        # lists are converted to strings here because 
+        # 1) lists aren't hashable and 
+        # 2) that's the only way psycopg2 is able to handle them
+        return  str([_to_pythonic_hashable_type(val) for val in x])
     if pd.isna(x):
         return None
     if hasattr(x, "item"):
+        # if the type is a numpy type it'll have an item() method for converting to a native python type
         x = x.item()
     return x
 
@@ -73,8 +83,8 @@ def _update_table(cursor, table_name, pk_column, updated_rows):
     params = []
     for row in updated_rows.to_records():
         params.append(
-            [_to_pythonic_type(row[col]) for col in columns]
-            + [_to_pythonic_type(row[pk_column])]
+            [_to_pythonic_hashable_type(row[col]) for col in columns]
+            + [_to_pythonic_hashable_type(row[pk_column])]
         )
 
     execute_batch(
@@ -87,7 +97,7 @@ def _update_table(cursor, table_name, pk_column, updated_rows):
 def _insert_table(cursor, table_name, new_rows):
     values = []
     for row in new_rows.to_records():
-        values.append([_to_pythonic_type(row[col]) for col in new_rows.columns])
+        values.append([_to_pythonic_hashable_type(row[col]) for col in new_rows.columns])
     column_names = ", ".join(new_rows.columns)
 
     execute_values(
@@ -120,8 +130,12 @@ def _assert_dataframes_match(a, b):
     #     ).all(), f'Sanity check failed: After update column "{col}" was different then expected: {new_df[col][~matches]} != {final_df[col][~matches]}'
 
 def _assert_has_subset_of_rows(subset_df, full_df):
-    assert (subset_df.columns == full_df.columns).all()
-    assert len(subset_df.merge(full_df)) == len(subset_df)
+    # Convert dataframe values to hashable types
+    full_pythonic_df = full_df.applymap(_to_pythonic_hashable_type)
+    subset_pythonic_df = subset_df.applymap(_to_pythonic_hashable_type)
+    
+    assert (subset_pythonic_df.columns == full_pythonic_df.columns).all()
+    assert len(subset_pythonic_df.merge(full_pythonic_df)) == len(subset_pythonic_df)
 
 # taken from https://wiki.postgresql.org/wiki/Retrieve_primary_key_columns
 PRIMARY_KEY_QUERY = """SELECT a.attname, format_type(a.atttypid, a.atttypmod) AS data_type
