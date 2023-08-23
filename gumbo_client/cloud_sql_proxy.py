@@ -83,7 +83,7 @@ def get_cloud_sql_proxy_port(pid_file, instance):
         result = subprocess.run(command, check=True, capture_output=True)
     except FileNotFoundError as ex:
         raise Exception(
-            "Failed to execute {command}. Have you run 'sh install_prereqs.sh' which should install cloud_sql_proxy in your path?"
+            "Failed to execute {command}. Have you run 'sh install_prereqs.sh' which should install cloud-sql-proxy in your path?"
         )
     version_output = result.stdout.decode("utf8")
     m = re.match("\\S+ version ([^+]+).*", version_output)

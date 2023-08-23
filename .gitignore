@@ -4,3 +4,6 @@ gumbo_client.egg-info
 .env
 client_api/app.yaml
 client_api/secrets/
+
+build/
+.DS_Store
