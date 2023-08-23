@@ -152,7 +152,7 @@ And you should be ready to go!
 
 To use the v2 client, import `client_v2` instead of `client` and then use it as you normally would to read tables. For example:
 ```
-import client_v2
+from gumbo_client import client_v2
 
 client = client_v2.Client()
 df = client.get("depmap_model_type")
