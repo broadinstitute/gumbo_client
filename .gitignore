@@ -6,3 +6,4 @@ gumbo_client/__pycache__
 gumbo_client.egg-info
 __pycache__
 build/
+.DS_Store
