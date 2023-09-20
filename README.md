@@ -135,25 +135,25 @@ the executable file that runs the proxy should be located at `/usr/local/bin/clo
 3. If you're still running into problems, reach out to someone on the software team for help (Nayeem or Sarah might be most able to help).
 
 
-# Version 2 (in Beta)
-Version 2 of the gumbo client is slowly being developed and released, with the goal of simplifying the database connection. From the users perspective this just means:
+# The REST API Client (in Beta)
+A new iteration of the gumbo client is slowly being developed and released, with the goal of simplifying the database connection. From the users perspective this just means:
 1. Simpler setup (no need to download the proxy, and debug differing versions)
 2. No need for the client to launch a separate task in the background
 3. Fewer connection errors 
 
 Currently, this version only supports _reading_ from the gumbo database, but we're hoping to eventually fully replace the functionality of the old client.
 
-To setup the connection for v2, simply run:
+To setup the connection to the API, simply run:
 ```
 gcloud secrets versions access latest --secret='client-iap-client-id' --project depmap-gumbo > ~/.config/gumbo/iap_client_id.txt
 gcloud secrets versions access latest --secret='client-iap-auth-sa-json' --project depmap-gumbo > ~/.config/gumbo/client-iap-auth-sa.json
 ```
 And you should be ready to go!
 
-To use the v2 client, import `client_v2` instead of `client` and then use it as you normally would to read tables. For example:
+To use the new client, import `api_client` instead of `gumbo_client` and then use it as you normally would to read tables. For example:
 ```
-from gumbo_client import client_v2
+from gumbo_client import api_client
 
-client = client_v2.Client()
+client = api_client.Client()
 df = client.get("depmap_model_type")
 ```

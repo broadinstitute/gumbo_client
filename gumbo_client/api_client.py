@@ -1,7 +1,8 @@
 import os
+
+from deprecated import deprecated
 from google.oauth2 import service_account
 from google.auth.transport.requests import AuthorizedSession
-
 import pandas as pd
 
 base_url = 'https://rest-api-dot-depmap-gumbo.uc.r.appspot.com'
