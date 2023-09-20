@@ -2,8 +2,8 @@ __pycache__
 gumbo_client.egg-info
 
 .env
-client_api/app.yaml
-client_api/secrets/
+rest_api/app.yaml
+rest_api/secrets/
 
 build/
 .DS_Store

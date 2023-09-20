@@ -1,4 +1,4 @@
-# Gumbo Client API
+# Gumbo REST API
 
 An API which handles requests from the v2 gumbo client.
 

@@ -5,4 +5,4 @@ gcloud secrets versions access latest --secret=client-api-deployment-yaml --proj
 # Deploy the local version of the app
 gcloud app deploy app.yaml --project=depmap-gumbo
 # Delete the oldest version
-gcloud app versions delete $(gcloud app versions list --service=client-api --sort-by '~version' --format 'value(version.id)' | tail -n 1) --quiet
+gcloud app versions delete $(gcloud app versions list --service=rest-api --sort-by '~version' --format 'value(version.id)' | tail -n 1) --quiet
