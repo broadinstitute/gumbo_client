@@ -1,5 +1,6 @@
 import os
 
+from fastapi import HTTPException
 import pandas as pd
 
 
@@ -23,20 +24,23 @@ class GumboDAO:
             cursor.execute("SET my.username=%s", [self.username])
 
 
-    def get(self, table_name):
+    def get(self, table_name: str) -> pd.DataFrame:
         cursor = self.connection.cursor()
-        select_query = f"select * from {table_name}"
-
-        # If a primary key exists, use it to sort the table
-        # Views don't have primary keys to use here, and that's fine.
-        try:
-            pk_column = _get_pk_column(cursor, table_name)
-            select_query += f" order by {pk_column}"
-        except AssertionError:
-            pass
-        finally:
-            cursor.close()
-        return pd.read_sql(select_query, self.connection)
+        if table_name in _get_valid_table_names(cursor=cursor):
+            select_query = f"select * from {table_name}"
+            # If a primary key exists, use it to sort the table
+            try:
+                pk_column = _get_pk_column(cursor, table_name)
+                select_query += f" order by {pk_column}"
+            except UnexpectedPrimaryKeyCountException:
+                # Views don't have primary keys to use here, and future tables may have 
+                # multiple primary keys. Both are fine. Just move on without sorting.
+                pass
+            finally:
+                cursor.close()
+            return pd.read_sql(select_query, self.connection)
+        else: 
+            raise HTTPException(404)
 
 
 def _get_pk_column(cursor, table_name):
@@ -49,5 +53,17 @@ def _get_pk_column(cursor, table_name):
         AND    i.indisprimary;"""
     cursor.execute(primary_key_query, [table_name])
     rows = cursor.fetchall()
-    assert len(rows) == 1, f"expected 1 row, but got {rows}"
+    if len(rows) != 1:
+        raise UnexpectedPrimaryKeyCountException(f"expected 1 primary key, but got {rows}")
     return rows[0][0]
+
+
+def _get_valid_table_names(cursor) -> list[str]:
+    """Get the names of all tables and views in the pucblic schema."""
+    table_name_query = "SELECT table_name FROM information_schema.tables WHERE table_schema='public';"
+    cursor.execute(table_name_query)
+    return [row[0] for row in cursor.fetchall()]
+
+
+class UnexpectedPrimaryKeyCountException(Exception):
+    pass
