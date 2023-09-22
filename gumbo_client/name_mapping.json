@@ -197,7 +197,8 @@
 		"observed_infection_rate": "ObservedInfectionRate",
 		"vol_pooled_virus_for_each_well": "VolPooledVirusForEachWell",
 		"blasticidin_selection_ug_ml": "BlasticidinSelectionUgMl",
-		"transfected": "Transfected"
+		"transfected": "Transfected",
+		"exclude_from_crispr_combined":"ExcludeFromCRISPRCombined"
 	},
 	"screen_sequence": {
 		"sequence_entry":"SequenceEntry",
