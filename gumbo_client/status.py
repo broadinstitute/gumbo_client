@@ -40,7 +40,7 @@ class ModelStatusSummary:
         self.peddep_subgroup = peddep_subgroup
         self.statuses = {}
         self.screen_failure_details = None
-    
+
     def update_status(self, datatype: str, attempt_status: str, failure_details: ScreenFailureDetails=None) -> None:
         # if we don't have a status yet, use the attempt status
         if self.statuses.get(datatype) is None: 
@@ -155,7 +155,7 @@ def get_screen_failure_details(screener_qc, cds_qc, screener_status, substatus) 
     elif (screener_status=='Done') and (screener_qc=='PASS') and cds_qc_failed(cds_qc):
         return ScreenFailureDetails('Fail Data QC', True) 
     return ScreenFailureDetails('Other', True)
-    
+
 
 def screener_qc_failed(screener_qc):
     return (screener_qc is not None) and ("FAIL" in screener_qc)
