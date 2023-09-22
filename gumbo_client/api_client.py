@@ -1,12 +1,12 @@
 import os
 
-from deprecated import deprecated
 from google.oauth2 import service_account
 from google.auth.transport.requests import AuthorizedSession
 import pandas as pd
 
 base_url = 'https://rest-api-dot-depmap-gumbo.uc.r.appspot.com'
 gumbo_configs_dir = os.path.expanduser('~') + "/.config/gumbo/"
+username_filename = "username"
 client_id_filename = 'iap_client_id.txt'
 credentials_filename = 'client-iap-auth-sa.json'
 
@@ -14,12 +14,15 @@ credentials_filename = 'client-iap-auth-sa.json'
 class Client:
     def __init__(self):
         # Read secrets from file 
+        with open(gumbo_configs_dir + username_filename, 'r') as file:
+            self.username = file.read().rstrip()
         with open(gumbo_configs_dir + client_id_filename, 'r') as file:
             client_id = file.read().rstrip()
+        
+        # Get an authed session token 
         creds = service_account.IDTokenCredentials.from_service_account_file(
             gumbo_configs_dir + credentials_filename,
             target_audience=client_id)
-        # Get an authed session token 
         self.authed_session = AuthorizedSession(creds)
 
     def get(self, table_name: str) -> pd.DataFrame:

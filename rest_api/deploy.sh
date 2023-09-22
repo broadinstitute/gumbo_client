@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Read deployment configs from Google Secrets Manager
-gcloud secrets versions access latest --secret=client-api-deployment-yaml --project=depmap-gumbo > app.yaml
+gcloud secrets versions access latest --secret=rest-api-deployment-yaml --project=depmap-gumbo > app.yaml
 # Deploy the local version of the app
 gcloud app deploy app.yaml --project=depmap-gumbo
 # Delete the oldest version

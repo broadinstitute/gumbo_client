@@ -5,23 +5,9 @@ import pandas as pd
 
 
 class GumboDAO:
-    """Data Access Object for """
-    def __init__(
-        self,
-        psycopg2_connection,
-        sanity_check=True,
-        username=None,
-        autocommit=True
-    ):
-        self.sanity_check = sanity_check
+    """Data Access Object for reading and writing from the gumbo database"""
+    def __init__(self, psycopg2_connection):
         self.connection = psycopg2_connection
-        self.connection.autocommit = autocommit
-
-        # set the username for use in audit logs
-        self.username = username or os.getlogin() + " (py)"
-        with self.connection.cursor() as cursor:
-            print("setting username to", self.username)
-            cursor.execute("SET my.username=%s", [self.username])
 
 
     def get(self, table_name: str) -> pd.DataFrame:
@@ -64,6 +50,11 @@ def _get_valid_table_names(cursor) -> list[str]:
     cursor.execute(table_name_query)
     return [row[0] for row in cursor.fetchall()]
 
+def _set_username(cursor, username):
+    """Set the username for use in Gumbo's audit logs. This is only required before writing to the database."""
+    print("setting username to", username)
+    cursor.execute("SET my.username=%s", [username])
+    
 
 class UnexpectedPrimaryKeyCountException(Exception):
     pass

@@ -147,6 +147,7 @@ To setup the connection to the API, simply run:
 ```
 gcloud secrets versions access latest --secret='client-iap-client-id' --project depmap-gumbo > ~/.config/gumbo/iap_client_id.txt
 gcloud secrets versions access latest --secret='client-iap-auth-sa-json' --project depmap-gumbo > ~/.config/gumbo/client-iap-auth-sa.json
+gcloud config get account > ~/.config/gumbo/username
 ```
 And you should be ready to go!
 
