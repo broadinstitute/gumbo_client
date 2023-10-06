@@ -157,4 +157,6 @@ from gumbo_client import api_client
 
 client = api_client.Client()
 df = client.get("depmap_model_type")
+
+status_df = client.get_model_condition_status_summaries()
 ```

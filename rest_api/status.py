@@ -1,13 +1,6 @@
 from enum import Enum
 from datetime import date
 
-# DEPRECATED:
-# This 'status.py' file is defined in two places. Here and in the rest_api directory.
-# Neither python packages nor app engine apps can have local imports from outide their directory,
-# so the file must be defined in both places for now. The other definition (in rest_api) 
-# should be treated as the source of truth, and the usage of this in the gumbo client should 
-# be removed as soon as things switch to using the api client.
-
 
 # All possible statuses, in order of precidence
 # Ex. a cell line with one completed attempt and one failed attempt should be considered complete

@@ -25,11 +25,20 @@ class Client:
             target_audience=client_id)
         self.authed_session = AuthorizedSession(creds)
 
+
     def get(self, table_name: str) -> pd.DataFrame:
         url = f'{base_url}/table/{table_name}'
         response = self.authed_session.request("GET", url)
         response.raise_for_status()
         return pd.read_json(response.json())
+    
+
+    def get_model_condition_status_summaries(self, peddep_only: bool = False) -> dict:
+        response = self.authed_session.request("GET", f'{base_url}/status-summaries?peddep_only={peddep_only}')
+        response.raise_for_status()
+        return response.json()
+        # TODO: redeploy and test this locally before pushing change
+    
 
     def update(self, table_name, new_df, delete_missing_rows=False, reason=None):
         raise NotImplementedError
@@ -44,7 +53,4 @@ class Client:
     # Update the given rows. Do not delete any existing rows or insert any new rows.
     # Throw an exception if a given row does not already exist in the table.
     def update_only(self, table_name, updated_rows_df, reason=None):
-        raise NotImplementedError
-
-    def get_model_condition_status_summaries(self, peddep_only: bool = False):
         raise NotImplementedError
