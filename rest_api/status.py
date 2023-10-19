@@ -40,8 +40,9 @@ class ModelStatusSummary:
         self.peddep_subgroup = peddep_subgroup
         self.statuses = {}
         self.screen_failure_details = None
+        self.screen_failure_count = 0
 
-    def update_status(self, datatype: str, attempt_status: str, failure_details: ScreenFailureDetails=None) -> None:
+    def update_status(self, datatype: str, attempt_status: Status, failure_details: ScreenFailureDetails=None) -> None:
         # if we don't have a status yet, use the attempt status
         if self.statuses.get(datatype) is None: 
             self.statuses[datatype] = attempt_status
@@ -52,6 +53,10 @@ class ModelStatusSummary:
             if new_status != self.statuses[datatype]:
                 self.statuses[datatype] = new_status
                 self.screen_failure_details = failure_details
+        
+        # count crispr screen failures
+        if datatype == "crispr" and attempt_status == Status.failed:
+            self.screen_failure_count = self.screen_failure_count + 1
 
     def to_json_dict(self) -> dict:
         json = {datatype: status_display_name_dict[status_enum] for datatype, status_enum in self.statuses.items() if status_enum}
@@ -60,6 +65,7 @@ class ModelStatusSummary:
         if self.screen_failure_details:
             json["screen_failure_type"] = self.screen_failure_details.failure_type
             json["screen_failed_post_data_gen"] = self.screen_failure_details.failed_post_data_gen
+            json["screen_failure_count"] = self.screen_failure_count
         return json
 
 
@@ -122,7 +128,7 @@ def get_omics_status(profile_status, main_sequencing_id, blacklist, consortium_r
         return None
 
 
-def get_screen_status(status, screener_qc, cds_qc, consortium_release_date):
+def get_screen_status(status, screener_qc, cds_qc, consortium_release_date) -> Status:
     is_released = (consortium_release_date is not None) and (consortium_release_date < date.today())
     if screener_qc=="PASS" and cds_qc=="PASS" and is_released:
         return Status.complete

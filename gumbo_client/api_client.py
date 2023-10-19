@@ -33,11 +33,10 @@ class Client:
         return pd.read_json(response.json())
     
 
-    def get_model_condition_status_summaries(self, peddep_only: bool = False) -> dict:
+    def get_model_status_summary_df(self, peddep_only: bool = False) -> pd.DataFrame:
         response = self.authed_session.request("GET", f'{base_url}/status-summaries?peddep_only={peddep_only}')
         response.raise_for_status()
-        return response.json()
-        # TODO: redeploy and test this locally before pushing change
+        return pd.DataFrame(response.json()).transpose()
     
 
     def update(self, table_name, new_df, delete_missing_rows=False, reason=None):
