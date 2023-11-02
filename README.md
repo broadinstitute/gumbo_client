@@ -128,10 +128,10 @@ relays requests to Google and signs them with your google credentials.
 Steps for debugging:
 1. If you have the Broad VPN turned on, disconnect and try the client again. The VPN sometimes randomly interferes with requests made to GCP. 
 2. If that doesn't work, try to get a more specific error message by running the proxy directly. If you've followed the setup steps, 
-the executable file that runs the proxy should be located at `/usr/local/bin/cloud_sql_proxy`. You should be able to run it with one of the following commands 
-(depending on your version):
-    * Older versions of the proxy: `/usr/local/bin/cloud_sql_proxy -instances=depmap-gumbo:us-central1:gumbo-cloudsql=tcp:5432`
-    * Newer versions of the proxy: `/usr/local/bin/cloud_sql_proxy "depmap-gumbo:us-central1:gumbo-cloudsql?port=5432"`
+the executable file that runs the proxy should be located at `/usr/local/bin/cloud_sql_proxy`. You should be able to run it with one of the following command: 
+  ```
+  /usr/local/bin/cloud-sql-proxy-v2.6.0 "depmap-gumbo:us-central1:gumbo-cloudsql?port=5432"
+  ```
 3. If you're still running into problems, reach out to someone on the software team for help (Nayeem or Sarah might be most able to help).
 
 
