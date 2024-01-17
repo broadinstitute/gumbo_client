@@ -177,8 +177,8 @@ def _log_bulk_update(connection, username, tablename, rows_updated=0, rows_delet
     cursor.execute(insert_statement)
     cursor.close()
 
-class GumboDAO2:
-    def __init__(self, sanity_check, connection):
+class GumboDAO:
+    def __init__(self, connection, *, sanity_check=False):
         self.sanity_check = sanity_check
         self.connection = connection
 
@@ -203,7 +203,7 @@ class GumboDAO2:
         return pd.read_sql(select_query, self.connection)
 
 
-    def update(self, username, table_name, new_df, delete_missing_rows=False, reason=None):
+    def update(self, username, table_name, new_df, *, delete_missing_rows=False, reason=None):
         self._set_username(username)
 
         cur_df = self.get(table_name)
@@ -220,11 +220,13 @@ class GumboDAO2:
                 _assert_has_subset_of_rows(new_df, table_df[new_df.columns])
         return result
 
-    # Insert the given rows. Do not update or delete any existing rows.
-    # If a column is in the table but missing from the dataframe, it is populated with a default value (typically null)
-    # For tables which have auto-generated ID columns, the dataframe does not need to contain ID values.
-    # Throw an exception if a given row already exists in the table.
-    def insert_only(self, username, table_name, new_rows_df, reason=None):
+    def insert_only(self, username, table_name, new_rows_df, *, reason=None):
+        """
+            Insert the given rows. Do not update or delete any existing rows.
+            If a column is in the table but missing from the dataframe, it is populated with a default value (typically null)
+            For tables which have auto-generated ID columns, the dataframe does not need to contain ID values.
+            Throw an exception if a given row already exists in the table.
+        """
         self._set_username(username)
 
         cursor = self.connection.cursor()
@@ -236,9 +238,11 @@ class GumboDAO2:
         finally:
             cursor.close()
 
-    # Update the given rows. Do not delete any existing rows or insert any new rows.
-    # Throw an exception if a given row does not already exist in the table.
-    def update_only(self, username, table_name, updated_rows_df, reason=None):
+    def update_only(self, username, table_name, updated_rows_df, *, reason=None):
+        """
+            Update the given rows. Do not delete any existing rows or insert any new rows.
+            Throw an exception if a given row does not already exist in the table.
+        """
         self._set_username(username)
 
         cursor = self.connection.cursor()
@@ -251,7 +255,7 @@ class GumboDAO2:
         finally:
             cursor.close()
 
-    def get_model_condition_status_summaries(self, peddep_only: bool = False):
+    def get_model_condition_status_summaries(self, *, peddep_only: bool = False):
         # get the set of statuses 
         status_dict = status.init_status_dict(self.connection.cursor(), peddep_only)
         status_dict = status.add_omics_statuses(self.connection.cursor(), status_dict)

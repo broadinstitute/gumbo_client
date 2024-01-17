@@ -1,1 +1,1 @@
-from .gumbo_dao import GumboDAO2
+from .gumbo_dao import GumboDAO
