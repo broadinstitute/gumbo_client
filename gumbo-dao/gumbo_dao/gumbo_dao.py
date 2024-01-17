@@ -233,8 +233,6 @@ class GumboDAO:
         try:
             _insert_table(cursor, table_name, new_rows_df)
             _log_bulk_update(self.connection, username, table_name, rows_inserted=new_rows_df.shape[0], reason=reason)
-        except:
-            raise
         finally:
             cursor.close()
 
@@ -250,8 +248,6 @@ class GumboDAO:
             pk_column = _get_pk_column(cursor, table_name)
             _update_table(cursor, table_name, pk_column, updated_rows_df)
             _log_bulk_update(self.connection, username, table_name, rows_updated=updated_rows_df.shape[0], reason=reason)
-        except:
-            raise
         finally:
             cursor.close()
 

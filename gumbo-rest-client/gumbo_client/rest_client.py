@@ -3,28 +3,35 @@ import os
 from google.oauth2 import service_account
 from google.auth.transport.requests import AuthorizedSession
 import pandas as pd
+import os.path
 
 base_url = 'https://rest-api-dot-depmap-gumbo.uc.r.appspot.com'
-gumbo_configs_dir = os.path.expanduser('~') + "/.config/gumbo/"
+default_gumbo_configs_dir = "~/.config/gumbo"
 username_filename = "username"
 client_id_filename = 'iap_client_id.txt'
 credentials_filename = 'client-iap-auth-sa.json'
 
 
 class Client:
-    def __init__(self):
-        # Read secrets from file 
-        with open(gumbo_configs_dir + username_filename, 'r') as file:
-            self.username = file.read().rstrip()
-        with open(gumbo_configs_dir + client_id_filename, 'r') as file:
-            client_id = file.read().rstrip()
-        
-        # Get an authed session token 
-        creds = service_account.IDTokenCredentials.from_service_account_file(
-            gumbo_configs_dir + credentials_filename,
-            target_audience=client_id)
-        self.authed_session = AuthorizedSession(creds)
+    def __init__(self, *, config_dir=default_gumbo_configs_dir, authed_session=None, username=None):
+        config_dir = os.path.expanduser(config_dir)
+        if username is None:
+            with open(os.path.join(config_dir, username_filename), 'r') as file:
+                username = file.read().rstrip()
 
+        if not authed_session:
+            # Read secrets from file 
+            with open(os.path.join(config_dir, client_id_filename), 'r') as file:
+                client_id = file.read().rstrip()
+            
+            # Get an authed session token 
+            creds = service_account.IDTokenCredentials.from_service_account_file(
+                os.path.join(config_dir, credentials_filename),
+                target_audience=client_id)
+            authed_session = AuthorizedSession(creds)
+
+        self.username = username
+        self.authed_session = authed_session
 
     def get(self, table_name: str) -> pd.DataFrame:
         url = f'{base_url}/table/{table_name}'
@@ -32,7 +39,6 @@ class Client:
         response.raise_for_status()
         return pd.read_json(response.json())
     
-
     def get_model_status_summary_df(self, peddep_only: bool = False) -> pd.DataFrame:
         response = self.authed_session.request("GET", f'{base_url}/status-summaries?peddep_only={peddep_only}')
         response.raise_for_status()
