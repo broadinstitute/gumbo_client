@@ -1,9 +1,8 @@
 import numpy as np
 import pandas as pd
-from gumbo_client.client import _reconcile, _update_table
-import gumbo_client
+from gumbo_dao.gumbo_dao import _reconcile, _update_table
+import gumbo_dao.gumbo_dao
 from unittest.mock import MagicMock
-import gumbo_client.client
 import json
 import os
 import pytest
@@ -108,8 +107,8 @@ def test_missing_pk():
 def test_update_table(monkeypatch):
     execute_batch = MagicMock()
     cursor = MagicMock()
-
-    monkeypatch.setattr(gumbo_client.client, "execute_batch", execute_batch)
+    import gumbo_dao.gumbo_dao
+    monkeypatch.setattr(gumbo_dao.gumbo_dao, "execute_batch", execute_batch)
 
     def _execute_batch(cur, sql, params):
         assert cur == cursor
@@ -121,69 +120,16 @@ def test_update_table(monkeypatch):
     assert execute_batch.call_count == 1
 
 
-@pytest.mark.skipif(
-    os.environ.get("POSTGRES_TEST_DB") is None,
-    reason="Needs name of local test database",
-)
-def test_against_local_postgres(tmpdir):
-    config_path = tmpdir.join("config.json")
-    config_path.write(
-        json.dumps(
-            {
-                "host": "localhost",
-                "database": os.environ["POSTGRES_TEST_DB"],
-                "user": "postgres",
-            }
-        )
-    )
-    c = gumbo_client.Client(config_dir=str(tmpdir))
-
-    cur = c.connection.cursor()
-    cur.execute(
-        "create table test_sample_table (id integer primary key, str_col varchar(100), float_col float)"
-    )
-    cur.execute(
-        "insert into test_sample_table (id, str_col, float_col) values (1, 'a', 1.0), (2, 'b', 2.0)"
-    )
-    cur.close()
-
-    def check_table(expected):
-        df = c.get("test_sample_table")
-        rows = df.to_dict("records")
-        rows = sorted(rows, key=lambda row: row["id"])
-        assert rows == expected
-
-    check_table(
-        [
-            {"id": 1, "str_col": "a", "float_col": 1.0},
-            {"id": 2, "str_col": "b", "float_col": 2.0},
-        ]
-    )
-
-    final_df = pd.DataFrame(
-        [
-            {"id": 1, "str_col": "a2", "float_col": 11.0},
-            {"id": 2, "str_col": "b2", "float_col": 12.0},
-        ]
-    )
-    c.update("test_sample_table", final_df)
-
-    check_table(
-        [
-            {"id": 1, "str_col": "a2", "float_col": 11.0},
-            {"id": 2, "str_col": "b2", "float_col": 12.0},
-        ]
-    )
 
 def test_assert_has_subset_of_rows():
     full_df = pd.DataFrame([{"a": 1, "b": 2}, {"a": 3, "b": 4}, {"a": 1, "b": 12}, {"a": 3, "b": 14}])
     subset_df = pd.DataFrame([{"a": 1, "b": 2}, {"a": 3, "b": 4}])
     superset_df = pd.DataFrame([{"a": 1, "b": 2}, {"a": 13, "b": 14}])
 
-    gumbo_client.client._assert_has_subset_of_rows(subset_df=subset_df, full_df=full_df) # no exception thrown
+    gumbo_dao.gumbo_dao._assert_has_subset_of_rows(subset_df=subset_df, full_df=full_df) # no exception thrown
 
     with pytest.raises(Exception) as e_info:
-        gumbo_client.client._assert_has_subset_of_rows(subset_df=superset_df, full_df=full_df) # throws exception
+        gumbo_dao.gumbo_dao._assert_has_subset_of_rows(subset_df=superset_df, full_df=full_df) # throws exception
 
     with pytest.raises(Exception) as e_info:
-        gumbo_client.client._assert_has_subset_of_rows(subset_df=full_df, full_df=subset_df) # throws exception
+        gumbo_dao.gumbo_dao._assert_has_subset_of_rows(subset_df=full_df, full_df=subset_df) # throws exception

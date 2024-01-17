@@ -3,7 +3,7 @@ import json
 
 class NameMappingUtils:
     def __init__(self):
-        with importlib.resources.open_text("gumbo_client", "name_mapping.json") as file:
+        with importlib.resources.open_text("gumbo_dao", "name_mapping.json") as file:
             self.name_mapping = json.load(file) # ex. { "table_name": {"snake_case_col_name" -> "CustomColNAME"}}
 
     def rename_columns(self, table_name, df, convert_to_custom_names=True, inplace=False):

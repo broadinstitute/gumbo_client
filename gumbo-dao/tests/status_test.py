@@ -1,4 +1,4 @@
-from gumbo_client import status
+from gumbo_dao import status
 from datetime import date
 
 

@@ -1,4 +1,4 @@
-from gumbo_client import utils
+from gumbo_dao import utils
 import pandas as pd
 
 
