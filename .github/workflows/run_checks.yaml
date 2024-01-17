@@ -17,6 +17,8 @@ jobs:
             version: 1.4.2
             virtualenvs-create: true
             virtualenvs-in-project: true
+        - name: Install modules
+          run: ./all_install.sh
         - name: Run pytest
           run: ./all_tests.sh
 
