@@ -251,16 +251,11 @@ def _connect_with_retry(kwargs, max_attempts=3):
 
 
 class GumboDAO2:
-    def __init__(self):
-        self.initialized = False
-
-    def initialize(self, sanity_check, connection, username):
-        assert not self.initialized, "Cannot call initialize() more than once"
-        self.initialized = True
+    def __init__(self, sanity_check, connection):
         self.sanity_check = sanity_check
         self.connection = connection
-        self.username = username
 
+    def _set_username(self, username):
         with self.connection.cursor() as cursor:
             print("setting username to", self.username)
             cursor.execute("SET my.username=%s", [self.username])
@@ -281,7 +276,9 @@ class GumboDAO2:
         return pd.read_sql(select_query, self.connection)
 
 
-    def update(self, table_name, new_df, delete_missing_rows=False, reason=None):
+    def update(self, username, table_name, new_df, delete_missing_rows=False, reason=None):
+        self._set_username(username)
+
         cur_df = self.get(table_name)
 
         result = _update(self.connection, table_name, cur_df, new_df, self.username, delete_missing_rows, reason=reason)
@@ -300,7 +297,9 @@ class GumboDAO2:
     # If a column is in the table but missing from the dataframe, it is populated with a default value (typically null)
     # For tables which have auto-generated ID columns, the dataframe does not need to contain ID values.
     # Throw an exception if a given row already exists in the table.
-    def insert_only(self, table_name, new_rows_df, reason=None):
+    def insert_only(self, username, table_name, new_rows_df, reason=None):
+        self._set_username(username)
+
         cursor = self.connection.cursor()
         try:
             _insert_table(cursor, table_name, new_rows_df)
@@ -312,7 +311,9 @@ class GumboDAO2:
 
     # Update the given rows. Do not delete any existing rows or insert any new rows.
     # Throw an exception if a given row does not already exist in the table.
-    def update_only(self, table_name, updated_rows_df, reason=None):
+    def update_only(self, username, table_name, updated_rows_df, reason=None):
+        self._set_username(username)
+
         cursor = self.connection.cursor()
         try:
             pk_column = _get_pk_column(cursor, table_name)
@@ -343,7 +344,7 @@ class GumboDAO2:
             cursor.execute("SET my.username='invalid'")
         self.connection.close()
 
-class Client(GumboDAO2):
+class Client:
     def __init__(
         self,
         config_dir="~/.config/gumbo",
@@ -362,5 +363,31 @@ class Client(GumboDAO2):
 
         # set the username for use in audit logs
         username = username or os.getlogin() + " (py)"
-        self.initialize(sanity_check, connection, username)
+        self.dao = GumboDAO2(sanity_check, connection, username)
 
+    def get(self, table_name):
+        return self.dao.get(table_name)
+
+    def update(self, table_name, new_df, delete_missing_rows=False, reason=None):
+        return self.dao.update(self.username, table_name, new_df, delete_missing_rows, reason)
+
+    def insert_only(self, table_name, new_rows_df, reason=None):
+        return self.dao.insert_only(self.username, table_name, new_rows_df, reason)
+
+    def update_only(self, table_name, updated_rows_df, reason=None):
+        return self.dao.update_only(self.username, table_name, updated_rows_df, reason)
+
+    def get_model_condition_status_summaries(self, peddep_only: bool = False):
+        return self.dao.get_model_condition_status_summaries(peddep_only)
+
+    def commit(self):
+        self.connection.commit()
+
+    def rollback(self):
+        self.connection.rollback()
+
+    def close(self):
+        with self.connection.cursor() as cursor:
+            print("clearing username")
+            cursor.execute("SET my.username='invalid'")
+        self.connection.close()
