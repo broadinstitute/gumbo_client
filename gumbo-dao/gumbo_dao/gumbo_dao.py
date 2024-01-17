@@ -1,4 +1,6 @@
+import pandas as pd
 from . import status
+from psycopg2.extras import execute_batch, execute_values
 
 def _reconcile(pk_column, existing_table, target_table):
     "matches the rows by primary key column and returns a dataframe containing new rows, a dataframe containing rows in need of updating and the list of IDs of rows which should be deleted"
@@ -206,7 +208,7 @@ class GumboDAO2:
 
         cur_df = self.get(table_name)
 
-        result = _update(self.connection, table_name, cur_df, new_df, self.username, delete_missing_rows, reason=reason)
+        result = _update(self.connection, table_name, cur_df, new_df, username, delete_missing_rows, reason=reason)
         if self.sanity_check:
             # if we want to be paranoid, fetch the dataframe back and verify that it's the same as what we said we
             # wanted to target. 
@@ -228,7 +230,7 @@ class GumboDAO2:
         cursor = self.connection.cursor()
         try:
             _insert_table(cursor, table_name, new_rows_df)
-            _log_bulk_update(self.connection, self.username, table_name, rows_inserted=new_rows_df.shape[0], reason=reason)
+            _log_bulk_update(self.connection, username, table_name, rows_inserted=new_rows_df.shape[0], reason=reason)
         except:
             raise
         finally:
@@ -243,7 +245,7 @@ class GumboDAO2:
         try:
             pk_column = _get_pk_column(cursor, table_name)
             _update_table(cursor, table_name, pk_column, updated_rows_df)
-            _log_bulk_update(self.connection, self.username, table_name, rows_updated=updated_rows_df.shape[0], reason=reason)
+            _log_bulk_update(self.connection, username, table_name, rows_updated=updated_rows_df.shape[0], reason=reason)
         except:
             raise
         finally:

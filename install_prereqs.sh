@@ -15,6 +15,4 @@ Aborting
 EOF
   exit 1
 fi
-pip install -e .
-pip install -r dev-requirements.txt
 pre-commit install --hook-type pre-commit

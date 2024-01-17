@@ -5,7 +5,6 @@ import time
 
 import pandas as pd
 import psycopg2
-from psycopg2.extras import execute_batch, execute_values
 
 from .cloud_sql_proxy import get_cloud_sql_proxy_port
 from gumbo_dao import GumboDAO2

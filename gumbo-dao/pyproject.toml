@@ -1,21 +1,18 @@
 [tool.poetry]
-name = "gumbo-client"
-version = "0.4.2"
+name = "gumbo-dao"
+version = "0.1.0"
 description = ""
-authors = ["Sarah Wessel <swessel@broadinstitute.org>"]
+authors = ["Your Name <you@example.com>"]
 readme = "README.md"
-packages = [{include = "gumbo_client"}]
+packages = [{include = "gumbo_dao"}]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-pandas = "^1.1.0"
-google-auth = "^2.22.0"
-requests = "^2.31.0"
 psycopg2-binary = "^2.9.9"
-pytest = "^7.4.4"
+pandas = "^1.1.0"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^7.2.2"
+pytest = "^7.4.4"
 
 [build-system]
 requires = ["poetry-core"]
