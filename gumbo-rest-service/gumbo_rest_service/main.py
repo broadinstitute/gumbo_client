@@ -4,9 +4,7 @@ from typing import Annotated
 from fastapi import FastAPI, Depends
 from dotenv import load_dotenv, find_dotenv
 import psycopg2
-from gumbo_client.client import GumboDAO2
-
-from gumbo_client.gumbo_dao import GumboDAO2
+from gumbo_client.gumbo_dao import GumboDAO
 import status
 
 async def get_db_connection():
@@ -15,7 +13,7 @@ async def get_db_connection():
     return psycopg2.connect(connection_string)
 
 async def get_gumbo_dao(connection : Annotated[object, Depends(get_db_connection)]):
-    dao = GumboDAO2(sanity_check=True, 
+    dao = GumboDAO(sanity_check=True, 
                    connection=connection)
     return dao
 
