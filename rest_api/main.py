@@ -1,26 +1,32 @@
 import os
+from typing import Annotated
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from dotenv import load_dotenv, find_dotenv
 import psycopg2
+from gumbo_client.client import GumboDAO2
 
-from data_access import GumboDAO
+from gumbo_client.gumbo_dao import GumboDAO2
 import status
 
+async def get_db_connection():
+    load_dotenv(find_dotenv())
+    connection_string = os.environ["GUMBO_CONNECTION_STRING"]
+    return psycopg2.connect(connection_string)
 
-load_dotenv(find_dotenv())
-connection_string = os.environ["GUMBO_CONNECTION_STRING"]
-db_connection = psycopg2.connect(connection_string)
+async def get_gumbo_dao(connection : Annotated[object, Depends(get_db_connection)]):
+    dao = GumboDAO2(sanity_check=True, 
+                   connection=connection)
+    return dao
+
 app = FastAPI()
 
-
 @app.get("/table/{table_name}")
-async def get_table(table_name: str):
-    data_access = GumboDAO(psycopg2_connection=db_connection)
-    return data_access.get(table_name).to_json()
+async def get_table(table_name: str, gumbo_dao: Annotated[GumboDAO, Depends(get_gumbo_dao)]):
+    return gumbo_dao.get(table_name).to_json()
 
 @app.get("/status-summaries")
-async def get_model_condition_status_summaries(peddep_only: bool = False):
+async def get_model_condition_status_summaries(db_connection: Annotated[object, Depends(get_db_connection)], peddep_only: bool = False):
     # get the set of statuses 
     status_dict = status.init_status_dict(db_connection.cursor(), peddep_only)
     status_dict = status.add_omics_statuses(db_connection.cursor(), status_dict)
