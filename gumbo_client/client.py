@@ -250,30 +250,20 @@ def _connect_with_retry(kwargs, max_attempts=3):
     raise Exception(f"Failed to connect: f{exceptions}")
 
 
-class Client:
-    def __init__(
-        self,
-        config_dir="~/.config/gumbo",
-        sanity_check=True,
-        psycopg2_connection=None,
-        username=None,
-        autocommit=True
-    ):
-        config_dir = os.path.expanduser(config_dir)
+class GumboDAO2:
+    def __init__(self):
+        self.initialized = False
+
+    def initialize(self, sanity_check, connection, username):
+        assert not self.initialized, "Cannot call initialize() more than once"
+        self.initialized = True
         self.sanity_check = sanity_check
+        self.connection = connection
+        self.username = username
 
-        if psycopg2_connection is None:
-            self.connection = _build_db_connection(config_dir)
-        else:
-            self.connection = psycopg2_connection
-        self.connection.autocommit = autocommit
-
-        # set the username for use in audit logs
-        self.username = username or os.getlogin() + " (py)"
         with self.connection.cursor() as cursor:
             print("setting username to", self.username)
             cursor.execute("SET my.username=%s", [self.username])
-
 
     def get(self, table_name):
         cursor = self.connection.cursor()
@@ -352,3 +342,25 @@ class Client:
             print("clearing username")
             cursor.execute("SET my.username='invalid'")
         self.connection.close()
+
+class Client(GumboDAO2):
+    def __init__(
+        self,
+        config_dir="~/.config/gumbo",
+        sanity_check=True,
+        psycopg2_connection=None,
+        username=None,
+        autocommit=True
+    ):
+        config_dir = os.path.expanduser(config_dir)
+
+        if psycopg2_connection is None:
+            connection = _build_db_connection(config_dir)
+        else:
+            connection = psycopg2_connection
+        connection.autocommit = autocommit
+
+        # set the username for use in audit logs
+        username = username or os.getlogin() + " (py)"
+        self.initialize(sanity_check, connection, username)
+
