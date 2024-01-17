@@ -9,13 +9,23 @@ This API currently only supports GET requests for gumbo table data, but will be 
 2. Run the proxy in the background.
 3. Install requirements:
 
-    `pip install -r requirements.txt`
+    `poetry install`
 
 4. Run the app:
 
-    `uvicorn main:app --reload`
+    `poetry run uvicorn gumbo_rest_service.main:app --reload`
+
+# running tests
+
+Execute: 
+
+```
+pytest
+```
 
 # Deploying changes
 ```
 ./deploy.sh
 ``
+
+
