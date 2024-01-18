@@ -1,5 +1,6 @@
 from enum import Enum
 from datetime import date
+from typing import Optional, Dict
 
 # DEPRECATED:
 # This 'status.py' file is defined in two places. Here and in the rest_api directory.
@@ -43,7 +44,7 @@ class ScreenFailureDetails:
 
 # Each ModelStatusSummary object contains all of the info we need about the model
 class ModelStatusSummary:
-    def __init__(self, lineage: str, peddep_subgroup: str = None) -> None:
+    def __init__(self, lineage: str, peddep_subgroup: Optional[str] = None) -> None:
         self.lineage = lineage
         self.peddep_subgroup = peddep_subgroup
         self.statuses = {}
@@ -52,8 +53,8 @@ class ModelStatusSummary:
     def update_status(
         self,
         datatype: str,
-        attempt_status: str,
-        failure_details: ScreenFailureDetails = None,
+        attempt_status: Status,
+        failure_details: Optional[ScreenFailureDetails] = None,
     ) -> None:
         # if we don't have a status yet, use the attempt status
         if self.statuses.get(datatype) is None:
@@ -71,13 +72,14 @@ class ModelStatusSummary:
                 self.screen_failure_details = failure_details
 
     def to_json_dict(self) -> dict:
-        json = {
+        json: Dict[str, object] = {
             datatype: status_display_name_dict[status_enum]
             for datatype, status_enum in self.statuses.items()
             if status_enum
         }
         json["lineage"] = self.lineage
         json["peddep_subgroup"] = self.peddep_subgroup
+
         if self.screen_failure_details:
             json["screen_failure_type"] = self.screen_failure_details.failure_type
             json[
@@ -165,7 +167,7 @@ def add_crispr_statuses(cursor, status_dict):
 
 def get_omics_status(
     profile_status, main_sequencing_id, blacklist, consortium_release_date
-) -> Status:
+) -> Optional[Status]:
     is_released = (consortium_release_date is not None) and (
         consortium_release_date < date.today()
     )

@@ -217,21 +217,21 @@ class GumboDAO:
 
     def _set_username(self, username):
         with self.connection.cursor() as cursor:
-            print("setting username to", self.username)
-            cursor.execute("SET my.username=%s", [self.username])
+            print("setting username to", username)
+            cursor.execute("SET my.username=%s", [username])
 
     def get(self, table_name) -> Optional[pd.DataFrame]:
         cursor = self.connection.cursor()
         select_query = f"select * from {table_name}"
 
-        # If a primary key exists, use it to sort the table
-        # Views don't have primary keys to use here, and that's fine.
         try:
             pk_column = _get_pk_column(cursor, table_name)
             select_query += f" order by {pk_column}"
         except UndefinedTable:
             return None
         except AssertionError:
+            # If a primary key exists, use it to sort the table
+            # Views don't have primary keys to use here, and that's fine.
             pass
         finally:
             cursor.close()
@@ -257,6 +257,7 @@ class GumboDAO:
             # if we want to be paranoid, fetch the dataframe back and verify that it's the same as what we said we
             # wanted to target.
             table_df = self.get(table_name)
+            assert table_df is not None
             # only check the columns that were provided in the target table
             if delete_missing_rows:
                 _assert_dataframes_match(new_df, table_df[new_df.columns])
