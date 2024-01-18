@@ -53,13 +53,6 @@ class Client:
         self._check_response_code(response)
         return unpack(response.json())
 
-    def get_model_status_summary_df(self, peddep_only: bool = False) -> pd.DataFrame:
-        response = self.authed_session.request(
-            "GET", f"{base_url}/status-summaries?peddep_only={peddep_only}"
-        )
-        self._check_response_code(response)
-        return pd.DataFrame(response.json()).transpose()
-
     def update(self, table_name, new_df, delete_missing_rows=False, reason=None):
         raise NotImplementedError
 

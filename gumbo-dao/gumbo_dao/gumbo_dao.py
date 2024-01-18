@@ -1,5 +1,4 @@
 import pandas as pd
-from . import status
 from psycopg2.extras import execute_batch, execute_values
 from psycopg2.errors import UndefinedTable
 from typing import Optional
@@ -307,11 +306,3 @@ class GumboDAO:
             )
         finally:
             cursor.close()
-
-    def get_model_condition_status_summaries(self, *, peddep_only: bool = False):
-        # get the set of statuses
-        status_dict = status.init_status_dict(self.connection.cursor(), peddep_only)
-        status_dict = status.add_omics_statuses(self.connection.cursor(), status_dict)
-        status_dict = status.add_crispr_statuses(self.connection.cursor(), status_dict)
-        # convert from dict[string -> MCInfo] to dict[string -> dict]
-        return {mc_id: info.to_json_dict() for mc_id, info in status_dict.items()}
