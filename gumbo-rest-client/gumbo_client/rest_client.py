@@ -7,28 +7,36 @@ import os.path
 from .exceptions import UnknownTable
 from dataframe_json_packing import unpack
 
-base_url = 'https://rest-api-dot-depmap-gumbo.uc.r.appspot.com'
+base_url = "https://rest-api-dot-depmap-gumbo.uc.r.appspot.com"
 default_gumbo_configs_dir = "~/.config/gumbo"
 username_filename = "username"
-client_id_filename = 'iap_client_id.txt'
-credentials_filename = 'client-iap-auth-sa.json'
+client_id_filename = "iap_client_id.txt"
+credentials_filename = "client-iap-auth-sa.json"
+
 
 class Client:
-    def __init__(self, *, config_dir=default_gumbo_configs_dir, authed_session=None, username=None):
+    def __init__(
+        self,
+        *,
+        config_dir=default_gumbo_configs_dir,
+        authed_session=None,
+        username=None,
+    ):
         config_dir = os.path.expanduser(config_dir)
         if username is None:
-            with open(os.path.join(config_dir, username_filename), 'r') as file:
+            with open(os.path.join(config_dir, username_filename), "r") as file:
                 username = file.read().rstrip()
 
         if not authed_session:
-            # Read secrets from file 
-            with open(os.path.join(config_dir, client_id_filename), 'r') as file:
+            # Read secrets from file
+            with open(os.path.join(config_dir, client_id_filename), "r") as file:
                 client_id = file.read().rstrip()
-            
-            # Get an authed session token 
+
+            # Get an authed session token
             creds = service_account.IDTokenCredentials.from_service_account_file(
                 os.path.join(config_dir, credentials_filename),
-                target_audience=client_id)
+                target_audience=client_id,
+            )
             authed_session = AuthorizedSession(creds)
 
         self.username = username
@@ -40,13 +48,15 @@ class Client:
         response.raise_for_status()
 
     def get(self, table_name: str) -> pd.DataFrame:
-        url = f'{base_url}/table/{table_name}'
+        url = f"{base_url}/table/{table_name}"
         response = self.authed_session.request("GET", url)
         self._check_response_code(response)
         return unpack(response.json())
-    
+
     def get_model_status_summary_df(self, peddep_only: bool = False) -> pd.DataFrame:
-        response = self.authed_session.request("GET", f'{base_url}/status-summaries?peddep_only={peddep_only}')
+        response = self.authed_session.request(
+            "GET", f"{base_url}/status-summaries?peddep_only={peddep_only}"
+        )
         self._check_response_code(response)
         return pd.DataFrame(response.json()).transpose()
 

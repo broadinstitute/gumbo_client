@@ -34,21 +34,24 @@ pytestmark = pytest.mark.skipif(
 #             method_fn = self.http_client.post
 #         else:
 #             raise NotImplemented()
-        
+
 #         return ResponseAdapter(method_fn(url))
+
 
 @fixture
 def http_client(monkeypatch):
     monkeypatch.setenv("GUMBO_CONNECTION_STRING", os.environ["POSTGRES_TEST_DB"])
     return TestClient(gumbo_rest_service.main.app)
 
+
 @fixture
 def gumbo_client(http_client):
-    # the client wants a authsession interface 
-    # but our http test client has a different interface, 
+    # the client wants a authsession interface
+    # but our http test client has a different interface,
     # use an adapter that has the methods we need
     # return Client(username="testuser", authed_session=HTTPSessionAdapter(http_client))
     return Client(username="testuser", authed_session=(http_client))
+
 
 @fixture
 def sample_tables():
@@ -57,16 +60,18 @@ def sample_tables():
 
     cursor = connection.cursor()
     cursor.execute("DROP TABLE IF EXISTS sample")
-    cursor.execute("CREATE TABLE sample (ID VARCHAR(10), INTCOL INTEGER, STRCOL VARCHAR(100), FLOATCOL FLOAT, DATECOL DATE)")
+    cursor.execute(
+        "CREATE TABLE sample (ID VARCHAR(10), INTCOL INTEGER, STRCOL VARCHAR(100), FLOATCOL FLOAT, DATECOL DATE)"
+    )
     cursor.close()
 
     yield
 
 
-
 def test_get_table(gumbo_client, sample_tables):
     df = gumbo_client.get("sample")
     assert list(df.columns) == ["id", "intcol", "strcol", "floatcol", "datecol"]
+
 
 def test_get_missing_table(gumbo_client):
     with pytest.raises(UnknownTable):

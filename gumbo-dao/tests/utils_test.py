@@ -17,5 +17,7 @@ def test_name_mapping():
     assert test_df.columns.tolist() == ["A", "B", "c"]
 
     # convert back to snake case (lowercase letters) where the mapping exists
-    mapping_utils.rename_columns("test_table", test_df, convert_to_custom_names=False, inplace=True)
+    mapping_utils.rename_columns(
+        "test_table", test_df, convert_to_custom_names=False, inplace=True
+    )
     assert test_df.columns.tolist() == ["a", "b", "c"]

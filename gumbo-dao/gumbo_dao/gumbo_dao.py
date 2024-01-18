@@ -4,6 +4,7 @@ from psycopg2.extras import execute_batch, execute_values
 from psycopg2.errors import UndefinedTable
 from typing import Optional
 
+
 def _reconcile(pk_column, existing_table, target_table):
     "matches the rows by primary key column and returns a dataframe containing new rows, a dataframe containing rows in need of updating and the list of IDs of rows which should be deleted"
 
@@ -58,10 +59,10 @@ def _to_pythonic_hashable_types(row: dict):
 def _to_pythonic_hashable_type(x):
     """Convert a single value to a pythonic hashable type that can be handled by the database"""
     if type(x) == list:
-        # lists are converted to strings here because 
-        # 1) lists aren't hashable and 
+        # lists are converted to strings here because
+        # 1) lists aren't hashable and
         # 2) that's the only way psycopg2 is able to handle them
-        return  str([_to_pythonic_hashable_type(val) for val in x])
+        return str([_to_pythonic_hashable_type(val) for val in x])
     if pd.isna(x):
         return None
     if hasattr(x, "item"):
@@ -90,7 +91,9 @@ def _update_table(cursor, table_name, pk_column, updated_rows):
 def _insert_table(cursor, table_name, new_rows):
     values = []
     for row in new_rows.to_records():
-        values.append([_to_pythonic_hashable_type(row[col]) for col in new_rows.columns])
+        values.append(
+            [_to_pythonic_hashable_type(row[col]) for col in new_rows.columns]
+        )
     column_names = ", ".join(new_rows.columns)
 
     execute_values(
@@ -101,6 +104,7 @@ def _insert_table(cursor, table_name, new_rows):
 def _delete_rows(cursor, table_name, pk_column, ids):
     params = [[id] for id in ids]
     execute_batch(cursor, f"DELETE FROM {table_name} WHERE {pk_column} = %s", params)
+
 
 def _both_empty(a, b):
     return (a is None or math.isnan(a)) and (b is None or math.isnan(b))
@@ -122,13 +126,15 @@ def _assert_dataframes_match(a, b):
     #         matches
     #     ).all(), f'Sanity check failed: After update column "{col}" was different then expected: {new_df[col][~matches]} != {final_df[col][~matches]}'
 
+
 def _assert_has_subset_of_rows(subset_df, full_df):
     # Convert dataframe values to hashable types
     full_pythonic_df = full_df.applymap(_to_pythonic_hashable_type)
     subset_pythonic_df = subset_df.applymap(_to_pythonic_hashable_type)
-    
+
     assert (subset_pythonic_df.columns == full_pythonic_df.columns).all()
     assert len(subset_pythonic_df.merge(full_pythonic_df)) == len(subset_pythonic_df)
+
 
 # taken from https://wiki.postgresql.org/wiki/Retrieve_primary_key_columns
 PRIMARY_KEY_QUERY = """SELECT a.attname, format_type(a.atttypid, a.atttypmod) AS data_type
@@ -146,7 +152,15 @@ def _get_pk_column(cursor, table_name):
     return rows[0][0]
 
 
-def _update(connection, table_name, cur_df, new_df, username, delete_missing_rows=False, reason=None):
+def _update(
+    connection,
+    table_name,
+    cur_df,
+    new_df,
+    username,
+    delete_missing_rows=False,
+    reason=None,
+):
     cursor = connection.cursor()
 
     try:
@@ -158,9 +172,17 @@ def _update(connection, table_name, cur_df, new_df, username, delete_missing_row
         _update_table(cursor, table_name, pk_column, updated_rows)
         if delete_missing_rows:
             _delete_rows(cursor, table_name, pk_column, removed_rows)
-        
+
         deleted_row_count = len(removed_rows) if delete_missing_rows else 0
-        _log_bulk_update(connection, username, table_name, updated_rows.shape[0], new_rows.shape[0], deleted_row_count, reason=reason)
+        _log_bulk_update(
+            connection,
+            username,
+            table_name,
+            updated_rows.shape[0],
+            new_rows.shape[0],
+            deleted_row_count,
+            reason=reason,
+        )
     except:
         raise
     finally:
@@ -170,7 +192,15 @@ def _update(connection, table_name, cur_df, new_df, username, delete_missing_row
     )
 
 
-def _log_bulk_update(connection, username, tablename, rows_updated=0, rows_deleted=0, rows_inserted=0, reason=None):
+def _log_bulk_update(
+    connection,
+    username,
+    tablename,
+    rows_updated=0,
+    rows_deleted=0,
+    rows_inserted=0,
+    reason=None,
+):
     reason_val = f"'{reason}'" if reason is not None else "null"
     insert_statement = f"""INSERT INTO bulk_update_log 
         (username, "timestamp", tablename, rows_updated, rows_deleted, rows_inserted, reason) 
@@ -178,6 +208,7 @@ def _log_bulk_update(connection, username, tablename, rows_updated=0, rows_delet
     cursor = connection.cursor()
     cursor.execute(insert_statement)
     cursor.close()
+
 
 class GumboDAO:
     def __init__(self, connection, *, sanity_check=False):
@@ -206,44 +237,59 @@ class GumboDAO:
             cursor.close()
         return pd.read_sql(select_query, self.connection)
 
-
-    def update(self, username, table_name, new_df, *, delete_missing_rows=False, reason=None):
+    def update(
+        self, username, table_name, new_df, *, delete_missing_rows=False, reason=None
+    ):
         self._set_username(username)
 
         cur_df = self.get(table_name)
 
-        result = _update(self.connection, table_name, cur_df, new_df, username, delete_missing_rows, reason=reason)
+        result = _update(
+            self.connection,
+            table_name,
+            cur_df,
+            new_df,
+            username,
+            delete_missing_rows,
+            reason=reason,
+        )
         if self.sanity_check:
             # if we want to be paranoid, fetch the dataframe back and verify that it's the same as what we said we
-            # wanted to target. 
+            # wanted to target.
             table_df = self.get(table_name)
             # only check the columns that were provided in the target table
             if delete_missing_rows:
                 _assert_dataframes_match(new_df, table_df[new_df.columns])
-            else: 
+            else:
                 _assert_has_subset_of_rows(new_df, table_df[new_df.columns])
         return result
 
     def insert_only(self, username, table_name, new_rows_df, *, reason=None):
         """
-            Insert the given rows. Do not update or delete any existing rows.
-            If a column is in the table but missing from the dataframe, it is populated with a default value (typically null)
-            For tables which have auto-generated ID columns, the dataframe does not need to contain ID values.
-            Throw an exception if a given row already exists in the table.
+        Insert the given rows. Do not update or delete any existing rows.
+        If a column is in the table but missing from the dataframe, it is populated with a default value (typically null)
+        For tables which have auto-generated ID columns, the dataframe does not need to contain ID values.
+        Throw an exception if a given row already exists in the table.
         """
         self._set_username(username)
 
         cursor = self.connection.cursor()
         try:
             _insert_table(cursor, table_name, new_rows_df)
-            _log_bulk_update(self.connection, username, table_name, rows_inserted=new_rows_df.shape[0], reason=reason)
+            _log_bulk_update(
+                self.connection,
+                username,
+                table_name,
+                rows_inserted=new_rows_df.shape[0],
+                reason=reason,
+            )
         finally:
             cursor.close()
 
     def update_only(self, username, table_name, updated_rows_df, *, reason=None):
         """
-            Update the given rows. Do not delete any existing rows or insert any new rows.
-            Throw an exception if a given row does not already exist in the table.
+        Update the given rows. Do not delete any existing rows or insert any new rows.
+        Throw an exception if a given row does not already exist in the table.
         """
         self._set_username(username)
 
@@ -251,12 +297,18 @@ class GumboDAO:
         try:
             pk_column = _get_pk_column(cursor, table_name)
             _update_table(cursor, table_name, pk_column, updated_rows_df)
-            _log_bulk_update(self.connection, username, table_name, rows_updated=updated_rows_df.shape[0], reason=reason)
+            _log_bulk_update(
+                self.connection,
+                username,
+                table_name,
+                rows_updated=updated_rows_df.shape[0],
+                reason=reason,
+            )
         finally:
             cursor.close()
 
     def get_model_condition_status_summaries(self, *, peddep_only: bool = False):
-        # get the set of statuses 
+        # get the set of statuses
         status_dict = status.init_status_dict(self.connection.cursor(), peddep_only)
         status_dict = status.add_omics_statuses(self.connection.cursor(), status_dict)
         status_dict = status.add_crispr_statuses(self.connection.cursor(), status_dict)

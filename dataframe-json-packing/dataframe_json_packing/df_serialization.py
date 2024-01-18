@@ -1,9 +1,10 @@
 import pandas as pd
 import datetime
 
-# created an adhoc serialization/deserialization 
-# format because panda's existing to_json does not 
+# created an adhoc serialization/deserialization
+# format because panda's existing to_json does not
 # retain data types
+
 
 def _date_column_from_ordinal(values):
     date_values = []
@@ -13,10 +14,13 @@ def _date_column_from_ordinal(values):
         date_values.append(value)
     return pd.Series(date_values, dtype="object")
 
-series_constructor_by_name = {'string': lambda values: pd.Series(data=values, dtype="string"), 
- 'int':lambda values: pd.Series(data=values, dtype="Int64"), 
- 'float':lambda values: pd.Series(data=values, dtype="Float64"), 
- 'date': _date_column_from_ordinal}
+
+series_constructor_by_name = {
+    "string": lambda values: pd.Series(data=values, dtype="string"),
+    "int": lambda values: pd.Series(data=values, dtype="Int64"),
+    "float": lambda values: pd.Series(data=values, dtype="Float64"),
+    "date": _date_column_from_ordinal,
+}
 
 
 def _ordinals_from_date_column(values):
@@ -27,14 +31,16 @@ def _ordinals_from_date_column(values):
         oridnal_values.append(value)
     return oridnal_values
 
+
 def _all_are_dates(values):
     for value in values:
         if not (isinstance(value, datetime.date) or (value is None)):
             return False
     return True
 
+
 def _replace_na_with_none(values, coerce):
-    # replace NA with None. I suspect there must be 
+    # replace NA with None. I suspect there must be
     # a better way then making this loop, but not sure what
     result = []
     for value in values:
@@ -58,7 +64,7 @@ def pack(df):
         values = _replace_na_with_none(df[column_name], coerce)
 
         # special handling of "object" series because these
-        # could be anything, but really they should only be 
+        # could be anything, but really they should only be
         # used for dates
         if type.name == "object":
             if _all_are_dates(values):
@@ -80,12 +86,12 @@ def pack(df):
 
 def unpack(d):
     columns_dict = {}
-    for column in d['columns']:
-        column_name = column['name']
-        type_name = column['type']
+    for column in d["columns"]:
+        column_name = column["name"]
+        type_name = column["type"]
         if type_name not in series_constructor_by_name:
             raise Exception(f"Column {column_name} was unknown type: {type_name}")
         constructor = series_constructor_by_name[type_name]
-        values = column['values']
+        values = column["values"]
         columns_dict[column_name] = constructor(values)
     return pd.DataFrame(columns_dict)
