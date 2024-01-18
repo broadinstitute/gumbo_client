@@ -52,8 +52,8 @@ def _reconcile(pk_column, existing_table, target_table):
 
 def _to_pythonic_hashable_types(row: dict):
     """Convert a row of values to pythonic hashable types"""
-    if type(row) == dict:
-        return {k: _to_pythonic_hashable_type(v) for k, v in row.items()}
+    assert type(row) == dict
+    return {k: _to_pythonic_hashable_type(v) for k, v in row.items()}
 
 
 def _to_pythonic_hashable_type(x):
@@ -107,7 +107,7 @@ def _delete_rows(cursor, table_name, pk_column, ids):
 
 
 def _both_empty(a, b):
-    return (a is None or math.isnan(a)) and (b is None or math.isnan(b))
+    return pd.isna(a) and pd.isna(b)
 
 
 def _assert_dataframes_match(a, b):

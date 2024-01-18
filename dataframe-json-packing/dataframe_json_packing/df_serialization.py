@@ -66,15 +66,15 @@ def pack(df):
         # special handling of "object" series because these
         # could be anything, but really they should only be
         # used for dates
-        if type.name == "object":
+        if type == "object":
             if _all_are_dates(values):
                 type_name = "date"
                 values = _ordinals_from_date_column(values)
             else:
                 raise Exception(f"Column {column_name} was unhandled type: {values}...")
-        elif type.name == "Int64":
+        elif type == "Int64":
             type_name = "int"
-        elif type.name == "Float64":
+        elif type == "Float64":
             type_name = "float"
         else:
             type_name = type.name
