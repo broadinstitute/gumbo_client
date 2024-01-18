@@ -12,7 +12,8 @@ psycopg2-binary = "^2.9.9"
 pandas = "^1.1.0"
 fastapi = "^0.109.0"
 python-dotenv = "^1.0.0"
-gumbo-dao = {path = "../gumbo-dao"}
+gumbo-dao = {path = "../gumbo-dao", develop = true}
+dataframe-json-packing = {path = "../dataframe-json-packing", develop = true}
 
 
 [tool.poetry.group.dev.dependencies]

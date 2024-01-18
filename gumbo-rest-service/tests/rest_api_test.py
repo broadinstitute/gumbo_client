@@ -29,7 +29,7 @@ def test_get_table(mock_dao, client):
         "/table/sample",
     )
     assert response.status_code == 200
-    assert json.loads(response.json()) == {"PK":{"0":"X","1":"Y"},"COL2":{"0":1,"1":2}}
+    assert response.json() == {'columns': [{'name': 'PK', 'type': 'string', 'values': ['X', 'Y']}, {'name': 'COL2', 'type': 'int', 'values': [1, 2]}]}
 
 # def test_status_summaries(mock_dao, client):
 #     def _mock_get_model_condition_status_summaries(peddep_only=False):

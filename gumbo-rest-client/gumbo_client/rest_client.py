@@ -4,13 +4,14 @@ from google.oauth2 import service_account
 from google.auth.transport.requests import AuthorizedSession
 import pandas as pd
 import os.path
+from .exceptions import UnknownTable
+from dataframe_json_packing import unpack
 
 base_url = 'https://rest-api-dot-depmap-gumbo.uc.r.appspot.com'
 default_gumbo_configs_dir = "~/.config/gumbo"
 username_filename = "username"
 client_id_filename = 'iap_client_id.txt'
 credentials_filename = 'client-iap-auth-sa.json'
-
 
 class Client:
     def __init__(self, *, config_dir=default_gumbo_configs_dir, authed_session=None, username=None):
@@ -33,17 +34,21 @@ class Client:
         self.username = username
         self.authed_session = authed_session
 
+    def _check_response_code(self, response):
+        if response.status_code == 404:
+            raise UnknownTable()
+        response.raise_for_status()
+
     def get(self, table_name: str) -> pd.DataFrame:
         url = f'{base_url}/table/{table_name}'
         response = self.authed_session.request("GET", url)
-        response.raise_for_status()
-        return pd.read_json(response.json())
+        self._check_response_code(response)
+        return unpack(response.json())
     
     def get_model_status_summary_df(self, peddep_only: bool = False) -> pd.DataFrame:
         response = self.authed_session.request("GET", f'{base_url}/status-summaries?peddep_only={peddep_only}')
-        response.raise_for_status()
+        self._check_response_code(response)
         return pd.DataFrame(response.json()).transpose()
-    
 
     def update(self, table_name, new_df, delete_missing_rows=False, reason=None):
         raise NotImplementedError

@@ -1,10 +1,11 @@
 import os
 from typing import Annotated
 
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
 from dotenv import load_dotenv, find_dotenv
 import psycopg2
 from gumbo_dao import GumboDAO
+from dataframe_json_packing import pack
 
 def _get_db_connection():
     load_dotenv(find_dotenv())
@@ -24,12 +25,25 @@ def _get_gumbo_dao(connection):
 async def get_gumbo_dao(connection : Annotated[object, Depends(get_db_connection)]):
     return _get_gumbo_dao(connection)
 
+import re 
+
 app = FastAPI()
+
+def _validate_name(name):
+    if re.match("[A-Za-z_]", name) is None:
+        raise HTTPException(status_code=400)
 
 @app.get("/table/{table_name}")
 async def get_table(table_name: str, gumbo_dao: Annotated[GumboDAO, Depends(get_gumbo_dao)]):
-    return gumbo_dao.get(table_name).to_json()
+    _validate_name(table_name)
+    df=gumbo_dao.get(table_name)
+    if df is None:
+        raise HTTPException(status_code=404)
+    result = pack(df)
+    return result
 
 @app.get("/status-summaries")
 async def get_model_condition_status_summaries( gumbo_dao: Annotated[GumboDAO, Depends(get_gumbo_dao)], peddep_only: bool = False):
     return gumbo_dao.get_model_condition_status_summaries(peddep_only=peddep_only)
+
+banana=True

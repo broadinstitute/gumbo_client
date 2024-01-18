@@ -1,6 +1,8 @@
 import pandas as pd
 from . import status
 from psycopg2.extras import execute_batch, execute_values
+from psycopg2.errors import UndefinedTable
+from typing import Optional
 
 def _reconcile(pk_column, existing_table, target_table):
     "matches the rows by primary key column and returns a dataframe containing new rows, a dataframe containing rows in need of updating and the list of IDs of rows which should be deleted"
@@ -187,7 +189,7 @@ class GumboDAO:
             print("setting username to", self.username)
             cursor.execute("SET my.username=%s", [self.username])
 
-    def get(self, table_name):
+    def get(self, table_name) -> Optional[pd.DataFrame]:
         cursor = self.connection.cursor()
         select_query = f"select * from {table_name}"
 
@@ -196,6 +198,8 @@ class GumboDAO:
         try:
             pk_column = _get_pk_column(cursor, table_name)
             select_query += f" order by {pk_column}"
+        except UndefinedTable:
+            return None
         except AssertionError:
             pass
         finally:

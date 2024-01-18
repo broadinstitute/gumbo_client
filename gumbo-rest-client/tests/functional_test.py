@@ -1,29 +1,45 @@
 from pytest import fixture
 from gumbo_client import Client
+from gumbo_client.exceptions import UnknownTable
 import gumbo_rest_service.main
 import pandas as pd
 from fastapi.testclient import TestClient
+import psycopg2
+import os
+import pytest
 
-class ResponseAdapter:
-    def __init__(self, response):
-        self.response = response
+pytestmark = pytest.mark.skipif(
+    os.environ.get("POSTGRES_TEST_DB") is None,
+    reason="Needs name of local test database",
+)
 
-class HTTPSessionAdapter:
-    def __init__(self, http_client) -> None:
-        self.http_client = http_client
+# class ResponseAdapter:
+#     def __init__(self, response):
+#         self.response = response
 
-    def request(self, method: str, url: str):
-        if method == "GET":
-            method_fn = self.http_client.get
-        elif method == "POST":
-            method_fn = self.http_client.post
-        else:
-            raise NotImplemented()
+#     def raise_for_status(self):
+#         self.response.raise_for_status()
+
+#     def json(self):
+#         return self.response.json()
+
+# class HTTPSessionAdapter:
+#     def __init__(self, http_client) -> None:
+#         self.http_client = http_client
+
+#     def request(self, method: str, url: str):
+#         if method == "GET":
+#             method_fn = self.http_client.get
+#         elif method == "POST":
+#             method_fn = self.http_client.post
+#         else:
+#             raise NotImplemented()
         
-        return ResponseAdapter(method_fn(url))
+#         return ResponseAdapter(method_fn(url))
 
 @fixture
-def http_client():
+def http_client(monkeypatch):
+    monkeypatch.setenv("GUMBO_CONNECTION_STRING", os.environ["POSTGRES_TEST_DB"])
     return TestClient(gumbo_rest_service.main.app)
 
 @fixture
@@ -31,17 +47,32 @@ def gumbo_client(http_client):
     # the client wants a authsession interface 
     # but our http test client has a different interface, 
     # use an adapter that has the methods we need
-    return Client(username="testuser", authed_session=HTTPSessionAdapter(http_client))
+    # return Client(username="testuser", authed_session=HTTPSessionAdapter(http_client))
+    return Client(username="testuser", authed_session=(http_client))
 
-def test_get_table(client):
-    df = client.get("sample")
-    expected_df = pd.DataFrame({"PK": ["X", "Y"], "X": [1, 2]})
-    assert expected_df.equals(df)
+@fixture
+def sample_tables():
+    connection = psycopg2.connect(os.environ["POSTGRES_TEST_DB"])
+    connection.autocommit = True
 
-# @pytest.mark.skipif(
-#     os.environ.get("POSTGRES_TEST_DB") is None,
-#     reason="Needs name of local test database",
-# )
+    cursor = connection.cursor()
+    cursor.execute("DROP TABLE IF EXISTS sample")
+    cursor.execute("CREATE TABLE sample (ID VARCHAR(10), INTCOL INTEGER, STRCOL VARCHAR(100), FLOATCOL FLOAT, DATECOL DATE)")
+    cursor.close()
+
+    yield
+
+
+
+def test_get_table(gumbo_client, sample_tables):
+    df = gumbo_client.get("sample")
+    assert list(df.columns) == ["id", "intcol", "strcol", "floatcol", "datecol"]
+
+def test_get_missing_table(gumbo_client):
+    with pytest.raises(UnknownTable):
+        gumbo_client.get("missing_table")
+
+
 # def test_against_local_postgres(tmpdir):
 #     config_path = tmpdir.join("config.json")
 #     config_path.write(
