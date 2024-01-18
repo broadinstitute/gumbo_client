@@ -49,13 +49,3 @@ async def get_table(
         raise HTTPException(status_code=404)
     result = pack(df)
     return result
-
-
-@app.get("/status-summaries")
-async def get_model_condition_status_summaries(
-    gumbo_dao: Annotated[GumboDAO, Depends(get_gumbo_dao)], peddep_only: bool = False
-):
-    return gumbo_dao.get_model_condition_status_summaries(peddep_only=peddep_only)
-
-
-banana = True
