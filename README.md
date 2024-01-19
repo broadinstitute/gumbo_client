@@ -5,10 +5,21 @@ A python package for reading/writing to the gumbo database
 
 ## Installations
 
-Install the package via:
+*Note: the client has been switched to the v2 of the client which works very
+differently. The installation instructions below have changed*
+
+If using poetry, add the following to your pyproject.toml :
 
 ```
-pip install git+https://github.com/broadinstitute/gumbo_client.git
+gumbo-rest-client = { git = "ssh://git@github.com:broadinstitute/gumbo_client.git", subdirectory = "gumbo-rest-client" }
+```
+
+and run then run `poetry lock --no-update`
+
+Otherwise, if you don't use poetry, install via pip
+
+```
+pip install git+https://git@github.com:broadinstitute/gumbo_client.git#egg=gumbo-rest-client&subdirectory=gumbo-rest-client
 ```
 
 This repo now only contains the new version of the gumbo client which no
@@ -19,8 +30,6 @@ service. From the users perspective this just means:
 2. No need for the client to launch a separate task in the background
 3. Fewer connection errors 
 
-Currently, this version only supports _reading_ from the gumbo database, but we're hoping to eventually fully replace the functionality of the old client.
-
 To setup the connection to the API, simply run:
 ```
 gcloud secrets versions access latest --secret='client-iap-auth-sa-json' --project depmap-gumbo > ~/.config/gumbo/client-iap-auth-sa.json
@@ -28,14 +37,12 @@ gcloud config get account > ~/.config/gumbo/username
 ```
 And you should be ready to go!
 
-To use the new client, import `api_client` instead of `gumbo_client` and then use it as you normally would to read tables. For example:
+To use the new client, import `Client` instead of `gumbo_client` and then use it as you normally would to read tables. For example:
 ```
-from gumbo_client import api_client
+from gumbo_client import Client
 
 client = api_client.Client()
 df = client.get("depmap_model_type")
-
-status_df = client.get_model_condition_status_summaries()
 ```
 
 
