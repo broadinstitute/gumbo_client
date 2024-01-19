@@ -1,0 +1,7 @@
+# This file contains a database password, and therefor is stored in secrets manager. Do not add to git
+# but instead update and store there
+runtime: python39
+service: rest-api-v2
+entrypoint: gunicorn -k uvicorn.workers.UvicornWorker gumbo_rest_service.main:app
+env_variables:
+  GUMBO_CONNECTION_STRING: 'postgres://gumbo-read-only:${secret:gumbo-read-only-password}/gumbo?host=/cloudsql/depmap-gumbo:us-central1:gumbo-cloudsql'

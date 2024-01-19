@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "dataframe-json-packing"
+version = "0.2.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+pandas = "^1.4.3"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.4"
+pyright = "^1.1.347"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

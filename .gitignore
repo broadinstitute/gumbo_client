@@ -7,3 +7,15 @@ rest_api/secrets/
 
 build/
 .DS_Store
+test-data/
+.ipynb_checkpoints/
+
+# copies of modules created by the deploy script because
+# gcloud app deploy wants all code under the deploy directory
+.relocated_for_deploy
+
+# these files are generated from the deploy process and so shouldn't
+# be checked into the repo
+app.yaml
+requirements.txt
+gumbo-rest-service/gumbo_rest_service/deploy_debug_info.py
