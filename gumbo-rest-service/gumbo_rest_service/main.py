@@ -59,7 +59,7 @@ async def get_table(
 @app.get("/debug-info")
 def get_debug_info():
     try:
-        from .deploy_debug_info import files
+        from .deploy_debug_info import files  # pyright: ignore [reportMissingImports]
     except ImportError:
         files = ["No debugging info"]
     return files
