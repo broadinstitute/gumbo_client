@@ -53,6 +53,9 @@ def gumbo_client(http_client):
     return Client(username="testuser", authed_session=(http_client))
 
 
+import datetime
+
+
 @fixture
 def sample_tables():
     connection = psycopg2.connect(os.environ["POSTGRES_TEST_DB"])
@@ -61,7 +64,11 @@ def sample_tables():
     cursor = connection.cursor()
     cursor.execute("DROP TABLE IF EXISTS sample")
     cursor.execute(
-        "CREATE TABLE sample (ID VARCHAR(10), INTCOL INTEGER, STRCOL VARCHAR(100), FLOATCOL FLOAT, DATECOL DATE)"
+        "CREATE TABLE sample (ID VARCHAR(10), INTCOL INTEGER, STRCOL VARCHAR(100), FLOATCOL FLOAT, DATECOL DATE, BOOLCOL BOOL)"
+    )
+    cursor.execute(
+        "INSERT INTO sample (ID, INTCOL, STRCOL, FLOATCOL, DATECOL, BOOLCOL) VALUES (%s, %s, %s, %s, %s, %s)",
+        ["id", 1, "str", 1.1, datetime.date(2000, 1, 1), True],
     )
     cursor.close()
 
@@ -70,7 +77,14 @@ def sample_tables():
 
 def test_get_table(gumbo_client, sample_tables):
     df = gumbo_client.get("sample")
-    assert list(df.columns) == ["id", "intcol", "strcol", "floatcol", "datecol"]
+    assert list(df.columns) == [
+        "id",
+        "intcol",
+        "strcol",
+        "floatcol",
+        "datecol",
+        "boolcol",
+    ]
 
 
 def test_get_missing_table(gumbo_client):

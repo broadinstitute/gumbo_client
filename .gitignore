@@ -9,3 +9,9 @@ build/
 .DS_Store
 test-data/
 .ipynb_checkpoints/
+
+# copies of modules created by the deploy script because
+# gcloud app deploy wants all code under the deploy directory
+.relocated_for_deploy
+app.yaml
+requirements.txt

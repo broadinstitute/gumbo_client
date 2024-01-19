@@ -20,16 +20,8 @@ series_constructor_by_name = {
     "int": lambda values: pd.Series(data=values, dtype="Int64"),
     "float": lambda values: pd.Series(data=values, dtype="Float64"),
     "date": _date_column_from_ordinal,
+    "boolean": lambda values: pd.Series(data=values, dtype="boolean"),
 }
-
-
-def _ordinals_from_date_column(values):
-    oridnal_values = []
-    for value in values:
-        if value is not None:
-            value = value.toordinal()
-        oridnal_values.append(value)
-    return oridnal_values
 
 
 def _all_are_dates(values):
@@ -55,29 +47,34 @@ def pack(df):
     df = df.convert_dtypes()
     columns = []
     for column_name, type in df.dtypes.items():
+        values = df[column_name]
         if type == "Int64":
             coerce = int
-        elif type == "Float64":
-            coerce = float
-        else:
-            coerce = lambda x: x
-        values = _replace_na_with_none(df[column_name], coerce)
-
-        # special handling of "object" series because these
-        # could be anything, but really they should only be
-        # used for dates
-        if type == "object":
-            if _all_are_dates(values):
-                type_name = "date"
-                values = _ordinals_from_date_column(values)
-            else:
-                raise Exception(f"Column {column_name} was unhandled type: {values}...")
-        elif type == "Int64":
             type_name = "int"
         elif type == "Float64":
+            coerce = float
             type_name = "float"
+        elif type in ["string"]:
+            coerce = lambda x: x
+            type_name = "string"
+        elif type == "boolean":
+            coerce = lambda x: bool(x)
+            type_name = "boolean"
+        elif type == "object":
+            # special handling of "object" series because these
+            # could be anything, but really they should only be
+            # used for dates
+            if _all_are_dates(values):
+                type_name = "date"
+                coerce = lambda x: x.toordinal()
+            else:
+                raise Exception(
+                    f"Column {column_name} was type object but elements not dates: {values}..."
+                )
         else:
-            type_name = type.name
+            raise Exception(f"Column {column_name} unknown type: {type}")
+
+        values = _replace_na_with_none(values, coerce)
 
         columns.append({"name": column_name, "type": type_name, "values": values})
     result = {"columns": columns}

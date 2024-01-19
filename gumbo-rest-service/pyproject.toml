@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "gumbo-rest-service"
-version = "0.1.0"
+version = "2.0.0"
 description = ""
 authors = ["Your Name <you@example.com>"]
 readme = "README.md"
@@ -14,6 +14,8 @@ fastapi = "^0.109.0"
 python-dotenv = "^1.0.0"
 gumbo-dao = {path = "../gumbo-dao", develop = true}
 dataframe-json-packing = {path = "../dataframe-json-packing", develop = true}
+gunicorn = "^21.2.0"
+uvicorn = "^0.26.0"
 
 
 [tool.poetry.group.dev.dependencies]

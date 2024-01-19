@@ -1,0 +1,135 @@
+#!/usr/bin/env python
+import os
+import re
+import shutil
+import subprocess
+
+# add code for rewriting yaml file
+
+
+def relocate_to_relative_copy(abs_url, staging_dir=".relocated_for_deploy"):
+    assert abs_url.startswith(
+        "file:///"
+    ), f"{repr(abs_url)} does not start with file:///"
+    source_dir = abs_url[len("file://") :]
+    dest_dir = os.path.join(".relocated_for_deploy", os.path.basename(source_dir))
+    print(f"Making a copy of {source_dir} to {dest_dir} to include it in deploy")
+    if os.path.exists(dest_dir):
+        shutil.rmtree(dest_dir)
+    shutil.copytree(source_dir, dest_dir)
+    return dest_dir
+
+
+print("Generating requirements.txt based on poetry environment...")
+requirements = subprocess.run(
+    ["poetry", "run", "pip", "freeze"], check=True, stdout=subprocess.PIPE
+).stdout.decode("utf8")
+
+with open("requirements.txt", "wt") as fd:
+    for line in requirements.split("\n"):
+        if line.strip() == "":
+            continue
+
+        m = re.match("\\S+$", line)
+        if m:  # normal cases like "annotated-types==0.6.0"
+            fd.write(line + "\n")
+            continue
+
+        m = re.match("(\\S+)\\s+@\\s+(file://\\S+)$", line)
+        if m:  # cases where module is defined with a filepath to read it from
+            localpath = relocate_to_relative_copy(m.group(2))
+            fd.write(f"{localpath}\n")
+            continue
+
+        m = re.match("-e .*$", line)
+        if (
+            m
+        ):  # cases like "-e git+ssh://git@github.com/broad..." poetry seems to add this, but we should be able to ignore
+            continue
+
+        raise Exception(f"Did not know how to handle: {repr(line)}")
+
+print("Generating app.yaml from app.yaml.template, filling in secrets...")
+
+
+def expand_variables(template):
+    def get_var(name):
+        assert name.startswith("secret:")
+        secret_name = name[len("secret:") :]
+        return get_secret(secret_name)
+
+    # find all the variables to expand in the form ${variable_name}
+    complete = re.subn("\\$\\{([^}]*)\\}", lambda m: get_var(m.group(1)), template)[0]
+    assert "${" not in complete
+    return complete
+
+
+def get_secret(secret_name):
+    return subprocess.run(
+        [
+            "gcloud",
+            "secrets",
+            "versions",
+            "access",
+            "latest",
+            "--secret",
+            secret_name,
+            "--project=depmap-gumbo",
+        ],
+        check=True,
+        stdout=subprocess.PIPE,
+    ).stdout.decode("utf8")
+
+
+with open("app.yaml.template", "rt") as fd:
+    app_yaml_template = fd.read()
+
+with open("app.yaml", "wt") as fd:
+    fd.write(expand_variables(app_yaml_template))
+
+print("Running gcloud to deploy app")
+subprocess.run(
+    [
+        "gcloud",
+        "app",
+        "deploy",
+        "app.yaml",
+        "--project=depmap-gumbo",
+        # "--no-cache",                            "--verbosity=debug",
+    ]
+)
+
+print("Deleting old deployments")
+versions = subprocess.run(
+    [
+        "gcloud",
+        "app",
+        "versions",
+        "list",
+        "--service=rest-api-v2",
+        "--project=depmap-gumbo",
+        "--sort-by",
+        "~version",
+        "--format",
+        "value(version.id)",
+    ],
+    text=True,
+    stdout=subprocess.PIPE,
+    check=True,
+).stdout
+for version in versions.split("\n")[-1]:
+    # Delete the last version
+    subprocess.run(
+        [
+            "gcloud",
+            "app",
+            "versions",
+            "delete",
+            "--service=rest-api-v2",
+            "--project=depmap-gumbo",
+            version,
+        ],
+        check=True,
+    )
+# Delete the oldest version
+# gcloud app versions delete $( | tail -n 1) --quiet
