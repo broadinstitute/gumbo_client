@@ -63,12 +63,16 @@ def sample_tables():
 
     cursor = connection.cursor()
     cursor.execute("DROP TABLE IF EXISTS sample")
+    cursor.execute("DROP TABLE IF EXISTS bulk_update_log")
     cursor.execute(
-        "CREATE TABLE sample (ID VARCHAR(10), INTCOL INTEGER, STRCOL VARCHAR(100), FLOATCOL FLOAT, DATECOL DATE, BOOLCOL BOOL)"
+        "CREATE TABLE sample (ID VARCHAR(10), INTCOL INTEGER, STRCOL VARCHAR(100), FLOATCOL FLOAT, DATECOL DATE, BOOLCOL BOOL, PRIMARY KEY (ID))"
     )
     cursor.execute(
         "INSERT INTO sample (ID, INTCOL, STRCOL, FLOATCOL, DATECOL, BOOLCOL) VALUES (%s, %s, %s, %s, %s, %s)",
         ["id", 1, "str", 1.1, datetime.date(2000, 1, 1), True],
+    )
+    cursor.execute(
+        'CREATE TABLE bulk_update_log (username varchar(100), "timestamp" TIMESTAMP, tablename varchar(100), rows_updated integer, rows_deleted integer, rows_inserted integer, reason varchar(1000))'
     )
     cursor.close()
 
@@ -90,6 +94,28 @@ def test_get_table(gumbo_client, sample_tables):
 def test_get_missing_table(gumbo_client):
     with pytest.raises(UnknownTable):
         gumbo_client.get("missing_table")
+
+
+def test_update_only(gumbo_client, sample_tables):
+    df = pd.DataFrame({"id": ["id"], "strcol": ["updated"], "intcol": [2]})
+    gumbo_client.update_only("sample", df, reason="because")
+
+    # make sure update worked
+    fetched_df = gumbo_client.get("sample")
+    assert list(fetched_df["id"]) == ["id"]
+    assert list(fetched_df["strcol"]) == ["updated"]
+    assert list(fetched_df["intcol"]) == [2]
+
+
+def test_insert_only(gumbo_client, sample_tables):
+    df = pd.DataFrame({"id": ["id2"], "strcol": ["inserted"], "intcol": [2]})
+    gumbo_client.insert_only("sample", df, reason="because")
+
+    # make sure update worked
+    fetched_df = gumbo_client.get("sample")
+    assert list(fetched_df["id"]) == ["id", "id2"]
+    assert list(fetched_df["strcol"]) == ["str", "inserted"]
+    assert list(fetched_df["intcol"]) == [1, 2]
 
 
 # def test_against_local_postgres(tmpdir):

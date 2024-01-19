@@ -3,8 +3,9 @@ import os
 import re
 import shutil
 import subprocess
-
-# add code for rewriting yaml file
+from glob import glob
+import hashlib
+import json
 
 
 def relocate_to_relative_copy(abs_url, staging_dir=".relocated_for_deploy"):
@@ -50,6 +51,21 @@ with open("requirements.txt", "wt") as fd:
         raise Exception(f"Did not know how to handle: {repr(line)}")
 
 print("Generating app.yaml from app.yaml.template, filling in secrets...")
+
+
+def md5(filename):
+    with open(filename, "rb") as fd:
+        return hashlib.md5(fd.read()).hexdigest()
+
+
+debug_info = []
+for filename in list(glob("**/*.py", recursive=True)) + list(
+    glob(".relocated_for_deploy/**/*.py", recursive=True)
+):
+    debug_info.append({"filename": filename, "md5": md5(filename)})
+
+with open("gumbo_rest_service/deploy_debug_info.py", "wt") as fd:
+    fd.write(f"files = {json.dumps(debug_info)}")
 
 
 def expand_variables(template):
