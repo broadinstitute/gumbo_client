@@ -11,8 +11,8 @@ import json
 base_url = "https://rest-api-v2-dot-depmap-gumbo.uc.r.appspot.com"
 default_gumbo_configs_dir = "~/.config/gumbo"
 username_filename = "username"
-client_id_filename = "iap_client_id.txt"
 credentials_filename = "client-iap-auth-sa.json"
+client_id = "814840278102-rsmqq17h7kh24a01mtg22kbo9fk5c9oi.apps.googleusercontent.com"
 
 
 class Client:
@@ -29,10 +29,6 @@ class Client:
                 username = file.read().rstrip()
 
         if not authed_session:
-            # Read secrets from file
-            with open(os.path.join(config_dir, client_id_filename), "r") as file:
-                client_id = file.read().rstrip()
-
             # Get an authed session token
             creds = service_account.IDTokenCredentials.from_service_account_file(
                 os.path.join(config_dir, credentials_filename),

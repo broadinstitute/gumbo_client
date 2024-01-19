@@ -10,6 +10,8 @@ from pydantic import BaseModel
 from enum import Enum
 from typing import Optional, List, Any
 
+import re
+
 
 def _get_db_connection():
     load_dotenv(find_dotenv())
@@ -33,8 +35,6 @@ def _get_gumbo_dao(connection):
 async def get_gumbo_dao(connection: Annotated[object, Depends(get_db_connection)]):
     return _get_gumbo_dao(connection)
 
-
-import re
 
 app = FastAPI()
 
