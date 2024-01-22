@@ -12,8 +12,8 @@ requests = "^2.31.0"
 pytest = "^7.4.4"
 google-auth = "^2.26.2"
 pandas = "^1.4"
-dataframe-json-packing = {path = "../dataframe-json-packing", develop = true}
-
+dataframe-json-packing = { git = "https://github.com/broadinstitute/gumbo_client.git", subdirectory = "dataframe-json-packing" }
+# dataframe-json-packing = {path = "../dataframe-json-packing", develop = true}
 
 [tool.poetry.group.dev.dependencies]
 gumbo-rest-service = {path = "../gumbo-rest-service", develop = true}
