@@ -4,7 +4,7 @@ version = "2.0.0"
 description = ""
 authors = ["Your Name <you@example.com>"]
 readme = "README.md"
-packages = [{include = "gumbo_client"}]
+packages = [{include = "gumbo_rest_client"}]
 
 [tool.poetry.dependencies]
 python = "^3.8"
