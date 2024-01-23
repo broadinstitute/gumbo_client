@@ -30,18 +30,33 @@ service. From the users perspective this just means:
 2. No need for the client to launch a separate task in the background
 3. Fewer connection errors 
 
-To setup the connection to the API, simply run:
+To use the new client, import `Client` from `gumbo_rest_client` and then use it as you normally would to read tables. For example:
 ```
-gcloud secrets versions access latest --secret='client-iap-auth-sa-json' --project depmap-gumbo > ~/.config/gumbo/client-iap-auth-sa.json
-gcloud config get account > ~/.config/gumbo/username
-```
-And you should be ready to go!
-
-To use the new client, import `Client` instead of `gumbo_client` and then use it as you normally would to read tables. For example:
-```
-from gumbo_client import Client
+from gumbo_rest_client import Client
 
 client = api_client.Client()
+df = client.get("depmap_model_type")
+```
+
+If you are writing your script to run from a non-interactive process, you will need
+a service account for it to run under and initialize the client. Also, you should pass in a useful label for username so we know the source of the updates when they
+are recorded to the audit log.
+
+Example:
+
+```
+from gumbo_rest_client import Client, create_authorized_session
+
+client = api_client.Client(username="my_script_name", 
+    authed_session=create_authorized_session(use_default_service_account=True))
+df = client.get("depmap_model_type")
+```
+
+If you want to test against the staging version, provide a different `base_url`
+```
+from gumbo_rest_client import Client, staging_url
+
+client = api_client.Client(base_url=staging_url)
 df = client.get("depmap_model_type")
 ```
 
@@ -59,9 +74,9 @@ Read or write from the following tables:
 The client will autocommit changes after insertions or updates.
 
 ```
-import gumbo_client
+from gumbo_rest_client import Client
 
-client = gumbo_client.Client(config_dir="~/.config/gumbo", username="firstInitialLastName")
+client = api_client.Client()
 
 # to read
 df = client.get("table_name")
