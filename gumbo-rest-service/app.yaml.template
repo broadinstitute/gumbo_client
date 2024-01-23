@@ -1,7 +1,7 @@
 # This file contains a database password, and therefor is stored in secrets manager. Do not add to git
 # but instead update and store there
 runtime: python39
-service: rest-api-v2
+service: {{service_name}}
 entrypoint: gunicorn -k uvicorn.workers.UvicornWorker gumbo_rest_service.main:app
 env_variables:
-  GUMBO_CONNECTION_STRING: 'postgres://gumbo-read-only:${secret:gumbo-read-only-password}/gumbo?host=/cloudsql/depmap-gumbo:us-central1:gumbo-cloudsql'
+  GUMBO_CONNECTION_STRING: 'postgres://{{user}}:{{password}}@/{{database}}?host=/cloudsql/{{cloud_sql_proxy_instance}}'

@@ -6,6 +6,8 @@ import subprocess
 from glob import glob
 import hashlib
 import json
+import sys
+import argparse
 
 
 def relocate_to_relative_copy(abs_url, staging_dir=".relocated_for_deploy"):
@@ -21,67 +23,27 @@ def relocate_to_relative_copy(abs_url, staging_dir=".relocated_for_deploy"):
     return dest_dir
 
 
-print("Generating requirements.txt based on poetry environment...")
-requirements = subprocess.run(
-    ["poetry", "run", "pip", "freeze"], check=True, stdout=subprocess.PIPE
-).stdout.decode("utf8")
-
-with open("requirements.txt", "wt") as fd:
-    for line in requirements.split("\n"):
-        if line.strip() == "":
-            continue
-
-        m = re.match("\\S+$", line)
-        if m:  # normal cases like "annotated-types==0.6.0"
-            fd.write(line + "\n")
-            continue
-
-        m = re.match("(\\S+)\\s+@\\s+(file://\\S+)$", line)
-        if m:  # cases where module is defined with a filepath to read it from
-            localpath = relocate_to_relative_copy(m.group(2))
-            fd.write(f"{localpath}\n")
-            continue
-
-        m = re.match("-e .*$", line)
-        if (
-            m
-        ):  # cases like "-e git+ssh://git@github.com/broad..." poetry seems to add this, but we should be able to ignore
-            continue
-
-        raise Exception(f"Did not know how to handle: {repr(line)}")
-
-print("Generating app.yaml from app.yaml.template, filling in secrets...")
-
-
 def md5(filename):
     with open(filename, "rb") as fd:
         return hashlib.md5(fd.read()).hexdigest()
 
 
-debug_info = []
-for filename in list(glob("**/*.py", recursive=True)) + list(
-    glob(".relocated_for_deploy/**/*.py", recursive=True)
-):
-    debug_info.append({"filename": filename, "md5": md5(filename)})
+def expand_variables(template, **variables):
+    "replace variable names in {{ ... }}"
 
-with open("gumbo_rest_service/deploy_debug_info.py", "wt") as fd:
-    fd.write(f"files = {json.dumps(debug_info)}")
-
-
-def expand_variables(template):
     def get_var(name):
-        assert name.startswith("secret:")
-        secret_name = name[len("secret:") :]
-        return get_secret(secret_name)
+        return variables[name]
 
     # find all the variables to expand in the form ${variable_name}
-    complete = re.subn("\\$\\{([^}]*)\\}", lambda m: get_var(m.group(1)), template)[0]
-    assert "${" not in complete
+    complete = re.subn("\\{\\{([^}]*)\\}\\}", lambda m: get_var(m.group(1)), template)[
+        0
+    ]
+    assert "{{" not in complete
     return complete
 
 
-def get_secret(secret_name):
-    return subprocess.run(
+def get_secrets(secret_name):
+    content = subprocess.run(
         [
             "gcloud",
             "secrets",
@@ -94,58 +56,136 @@ def get_secret(secret_name):
         ],
         check=True,
         stdout=subprocess.PIPE,
-    ).stdout.decode("utf8")
+        text=True,
+    ).stdout
+    return json.loads(content)
 
 
-with open("app.yaml.template", "rt") as fd:
-    app_yaml_template = fd.read()
+def generate_requirements_file():
+    print("Generating requirements.txt based on poetry environment...")
+    requirements = subprocess.run(
+        ["poetry", "run", "pip", "freeze"],
+        check=True,
+        stdout=subprocess.PIPE,
+        text=True,
+    ).stdout
 
-with open("app.yaml", "wt") as fd:
-    fd.write(expand_variables(app_yaml_template))
+    with open("requirements.txt", "wt") as fd:
+        for line in requirements.split("\n"):
+            if line.strip() == "":
+                continue
 
-print("Running gcloud to deploy app")
-subprocess.run(
-    [
-        "gcloud",
-        "app",
-        "deploy",
-        "app.yaml",
-        "--project=depmap-gumbo",
-        # "--no-cache",                            "--verbosity=debug",
-    ]
-)
+            m = re.match("\\S+$", line)
+            if m:  # normal cases like "annotated-types==0.6.0"
+                fd.write(line + "\n")
+                continue
 
-print("Deleting old deployments")
-versions = subprocess.run(
-    [
-        "gcloud",
-        "app",
-        "versions",
-        "list",
-        "--service=rest-api-v2",
-        "--project=depmap-gumbo",
-        "--sort-by",
-        "~version",
-        "--format",
-        "value(version.id)",
-    ],
-    text=True,
-    stdout=subprocess.PIPE,
-    check=True,
-).stdout
-for version in versions.split("\n")[-1]:
-    # Delete the last version
+            m = re.match("(\\S+)\\s+@\\s+(file://\\S+)$", line)
+            if m:  # cases where module is defined with a filepath to read it from
+                localpath = relocate_to_relative_copy(m.group(2))
+                fd.write(f"{localpath}\n")
+                continue
+
+            m = re.match("-e .*$", line)
+            if m:  # cases like "-e git+ssh://git@github.com/broad..." poetry
+                # seems to add this, but we should be able to ignore. Not sure
+                # exactly what this means
+                continue
+
+            raise Exception(f"Did not know how to handle: {repr(line)}")
+
+
+def generate_app_yaml(settings):
+    print("Generating app.yaml from app.yaml.template, filling in secrets...")
+
+    debug_info = []
+    for filename in list(glob("**/*.py", recursive=True)) + list(
+        glob(".relocated_for_deploy/**/*.py", recursive=True)
+    ):
+        debug_info.append({"filename": filename, "md5": md5(filename)})
+
+    with open("gumbo_rest_service/deploy_debug_info.py", "wt") as fd:
+        fd.write(f"files = {json.dumps(debug_info)}")
+
+    with open("app.yaml.template", "rt") as fd:
+        app_yaml_template = fd.read()
+
+    with open("app.yaml", "wt") as fd:
+        fd.write(
+            expand_variables(
+                app_yaml_template,
+                **settings,
+            )
+        )
+
+
+def deploy(settings: dict):
+    generate_requirements_file()
+    generate_app_yaml(settings)
+
+    print("Running gcloud to deploy app")
     subprocess.run(
         [
             "gcloud",
             "app",
-            "versions",
-            "delete",
-            "--service=rest-api-v2",
+            "deploy",
+            "app.yaml",
             "--project=depmap-gumbo",
-            version,
-        ],
-        check=True,
+            # "--no-cache",                            "--verbosity=debug",
+        ]
     )
-# Delete the oldest version
-# gcloud app versions delete $( | tail -n 1) --quiet
+
+
+def delete_oldest_version(service_name):
+    print("Deleting old deployments")
+    versions = subprocess.run(
+        [
+            "gcloud",
+            "app",
+            "versions",
+            "list",
+            f"--service={service_name}",
+            "--project=depmap-gumbo",
+            "--sort-by",
+            "~version",
+            "--format",
+            "value(version.id)",
+        ],
+        text=True,
+        stdout=subprocess.PIPE,
+        check=True,
+    ).stdout
+
+    for version in versions.split("\n")[-1]:
+        # Delete the last version
+        subprocess.run(
+            [
+                "gcloud",
+                "app",
+                "versions",
+                "delete",
+                f"--service={service_name}",
+                "--project=depmap-gumbo",
+                version,
+            ],
+            check=True,
+        )
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "env", nargs="?", help="either 'prod' or 'staging'", default="prod"
+    )
+    args = parser.parse_args()
+
+    if args.env == "prod":
+        settings = {"service_name": "rest-api-v2"}
+        settings.update(get_secrets("gumbo-client-readonly-config"))
+    else:
+        assert args.env == "staging"
+        settings = {"service_name": "rest-api-v2-staging"}
+        settings.update(get_secrets("gumbo-staging-client-config"))
+
+    deploy(settings)
+    delete_oldest_version(settings["service_name"])
