@@ -11,7 +11,7 @@ differently. The installation instructions below have changed*
 If using poetry, add the following to your pyproject.toml :
 
 ```
-gumbo-rest-client = { git = "ssh://git@github.com:broadinstitute/gumbo_client.git", subdirectory = "gumbo-rest-client" }
+gumbo-rest-client = { git = "https://github.com/broadinstitute/gumbo_client.git", subdirectory = "gumbo-rest-client" }
 ```
 
 and run then run `poetry lock --no-update`
