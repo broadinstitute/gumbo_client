@@ -24,8 +24,12 @@ pytest
 ```
 
 # Deploying changes
-```
-./deploy.sh
-``
 
+There is a deploy script written in python. Run:
+
+```
+./deploy ENV
+```
+
+where ENV is either `prod` or `staging`.
 
