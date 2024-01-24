@@ -25,7 +25,7 @@ gumbo-rest-service = {version = "^2.1.0", source = "public-python"}
 [[tool.poetry.source]]
 name = "public-python"
 url = "https://us-central1-python.pkg.dev/cds-artifacts/public-python/simple/"
-priority = "explicit"
+priority = "supplemental"
 
 [build-system]
 requires = ["poetry-core"]
