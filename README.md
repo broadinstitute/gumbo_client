@@ -110,3 +110,22 @@ In the parent run `./all_tests.sh` to run all tests. Alternatively you can
 run pytest`.
 
 
+## publishing package to internal package repo
+
+There's nothing in this repo that is private or secret, however, this is an internal
+tool, so it doesn't seem like it should be published on Pypi. Instead we can publish to an internal package index. 
+
+To setup for publishing (Based on https://medium.com/google-cloud/python-packages-via-gcps-artifact-registry-ce1714f8e7c1 )
+
+```
+poetry self add keyrings.google-artifactregistry-auth
+poetry config repositories.public-python https://us-central1-python.pkg.dev/cds-artifacts/public-python/                                                      
+# also make sure you've authentication via "gcloud auth login" if you haven't already
+```
+
+And then you can publish via:
+
+```
+poetry publish --build --repository public-python
+```
+

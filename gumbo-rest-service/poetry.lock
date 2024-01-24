@@ -82,19 +82,22 @@ files = [
 
 [[package]]
 name = "dataframe-json-packing"
-version = "0.1.0"
+version = "0.2.0"
 description = ""
 optional = false
-python-versions = "^3.8"
-files = []
-develop = false
+python-versions = ">=3.8,<4.0"
+files = [
+    {file = "dataframe_json_packing-0.2.0-py3-none-any.whl", hash = "sha256:fe19bc587d282081389cf4d216f366190e6f14eb25c3050ada27fbd1cf6f04f5"},
+    {file = "dataframe_json_packing-0.2.0.tar.gz", hash = "sha256:a3d33ba8ed1e3c08eaa456ee5846c361f3b0bb28685ca7a2feaed7fa8ed6ef94"},
+]
 
 [package.dependencies]
-pandas = "^1.4.3"
+pandas = ">=1.4.3,<2.0.0"
 
 [package.source]
-type = "directory"
-url = "../dataframe-json-packing"
+type = "legacy"
+url = "https://us-central1-python.pkg.dev/cds-artifacts/public-python/simple"
+reference = "public-python"
 
 [[package]]
 name = "exceptiongroup"
@@ -157,17 +160,20 @@ name = "gumbo-dao"
 version = "0.1.0"
 description = ""
 optional = false
-python-versions = "^3.8"
-files = []
-develop = false
+python-versions = ">=3.8,<4.0"
+files = [
+    {file = "gumbo_dao-0.1.0-py3-none-any.whl", hash = "sha256:2cdcc5bcd8a4a6f5395bdadf297ca8db066c900bd9c841597712d60ee21c9183"},
+    {file = "gumbo_dao-0.1.0.tar.gz", hash = "sha256:304f20c7f33b7dbebbee4900f91ce991f211fcb67877524e5abf23cb363af5ba"},
+]
 
 [package.dependencies]
-pandas = "^1.1.0"
-psycopg2-binary = "^2.9.9"
+pandas = ">=1.1.0,<2.0.0"
+psycopg2-binary = ">=2.9.9,<3.0.0"
 
 [package.source]
-type = "directory"
-url = "../gumbo-dao"
+type = "legacy"
+url = "https://us-central1-python.pkg.dev/cds-artifacts/public-python/simple"
+reference = "public-python"
 
 [[package]]
 name = "gunicorn"
@@ -835,4 +841,4 @@ standard = ["colorama (>=0.4)", "httptools (>=0.5.0)", "python-dotenv (>=0.13)",
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "4366d24d23f8c0a9f554e5fec4900a4c7cf3305b2325cfe858975dd388d6a2a2"
+content-hash = "8398d613d99adc367b310571403252beba7bed3d468cbaf2314b0b56f6e4fbd5"
