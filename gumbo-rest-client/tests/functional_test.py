@@ -1,6 +1,6 @@
 from pytest import fixture
-from gumbo_client import Client
-from gumbo_client.exceptions import UnknownTable
+from gumbo_rest_client import Client
+from gumbo_rest_client.exceptions import UnknownTable
 import gumbo_rest_service.main
 import pandas as pd
 from fastapi.testclient import TestClient
