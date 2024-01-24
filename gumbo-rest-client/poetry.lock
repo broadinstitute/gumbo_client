@@ -259,8 +259,20 @@ name = "gumbo-dao"
 version = "0.1.0"
 description = ""
 optional = false
-python-versions = "*"
-files = []
+python-versions = ">=3.8,<4.0"
+files = [
+    {file = "gumbo_dao-0.1.0-py3-none-any.whl", hash = "sha256:2cdcc5bcd8a4a6f5395bdadf297ca8db066c900bd9c841597712d60ee21c9183"},
+    {file = "gumbo_dao-0.1.0.tar.gz", hash = "sha256:304f20c7f33b7dbebbee4900f91ce991f211fcb67877524e5abf23cb363af5ba"},
+]
+
+[package.dependencies]
+pandas = ">=1.1.0,<2.0.0"
+psycopg2-binary = ">=2.9.9,<3.0.0"
+
+[package.source]
+type = "legacy"
+url = "https://us-central1-python.pkg.dev/cds-artifacts/public-python/simple"
+reference = "public-python"
 
 [[package]]
 name = "gumbo-rest-service"
@@ -992,4 +1004,4 @@ standard = ["colorama (>=0.4)", "httptools (>=0.5.0)", "python-dotenv (>=0.13)",
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "8ff29134ee0a5b34ac6c3115b88b347c31c0eaf1edb44722aaba784b0a703f8e"
+content-hash = "e655514a4658e60a6aee6ca2c223e5264d23b776fadf9042eaa73bfa1c03ea3d"
