@@ -8,17 +8,17 @@ A python package for reading/writing to the gumbo database
 *Note: the client has been switched to the v2 of the client which works very
 differently. The installation instructions below have changed*
 
-If using poetry, add the following to your pyproject.toml :
+If using poetry, run:
 
 ```
-gumbo-rest-client = { git = "https://github.com/broadinstitute/gumbo_client.git", subdirectory = "gumbo-rest-client" }
+poetry source add public-python https://us-central1-python.pkg.dev/cds-artifacts/public-python/simple/
+poetry add --source public-python gumbo-rest-service
 ```
-
-and run then run `poetry lock --no-update`
 
 Otherwise, if you don't use poetry, install via pip
 
 ```
+# This likely needs to be updated to be closer to the above
 pip install git+https://git@github.com:broadinstitute/gumbo_client.git#egg=gumbo-rest-client&subdirectory=gumbo-rest-client
 ```
 
