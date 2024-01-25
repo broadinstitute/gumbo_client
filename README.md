@@ -18,8 +18,7 @@ poetry add --source public-python gumbo-rest-service
 Otherwise, if you don't use poetry, install via pip
 
 ```
-# This likely needs to be updated to be closer to the above
-pip install git+https://git@github.com:broadinstitute/gumbo_client.git#egg=gumbo-rest-client&subdirectory=gumbo-rest-client
+pip install --extra-index-url=https://us-central1-python.pkg.dev/cds-artifacts/public-python/simple/ gumbo-rest-client
 ```
 
 This repo now only contains the new version of the gumbo client which no
