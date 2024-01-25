@@ -11,7 +11,7 @@ differently. The installation instructions below have changed*
 If using poetry, run:
 
 ```
-poetry source add public-python https://us-central1-python.pkg.dev/cds-artifacts/public-python/simple/
+poetry source add --priority=supplemental public-python https://us-central1-python.pkg.dev/cds-artifacts/public-python/simple/
 poetry add --source public-python gumbo-rest-service
 ```
 
