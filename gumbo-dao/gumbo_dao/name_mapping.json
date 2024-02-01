@@ -206,6 +206,7 @@
 		"previous_arxspan_id": "PreviousArxspanID",
 		"screen_id": "ScreenID",
 		"replicate": "Replicate",
+		"library_subset":"LibrarySubset",
 		"p_dna_sequence": "pDNASequence",
 		"p_dna_batch": "pDNABatch",
 		"days": "Days",
