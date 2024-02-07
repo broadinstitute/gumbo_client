@@ -40,7 +40,10 @@ df = client.get("depmap_model_type")
 Note: If you get an error about "Unable to acquire impersonated credentials ... PERMISSION_DENIED ... iam.serviceAccounts.getAccessToken" you are probably missing a required permission. Make sure your account has been granted "Service Account Token Creator" access on the service account gumbo-client-iap-auth@depmap-gumbo.iam.gserviceaccount.com .
 
 If you are writing your script to run from a non-interactive process, you will need
-a service account for it to run under and initialize the client. Also, you should pass in a useful label for username so we know the source of the updates when they
+a service account for it to run under and initialize the client. This service account will
+need to be granted access to the API via IAP permissions. To grant, go to https://console.cloud.google.com/security/iap?referrer=search&project=depmap-gumbo and grant the "IAP Secured Web App User" role to the service account on the resource "rest-api-v2" (for the production instance) and "rest-api-v2-staging" (for the staging instance).
+
+Also, you should pass in a useful label for username so we know the source of the updates when they
 are recorded to the audit log.
 
 Example:
