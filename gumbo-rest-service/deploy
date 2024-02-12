@@ -119,21 +119,23 @@ def generate_app_yaml(settings):
         )
 
 
-def deploy(settings: dict):
+def deploy(settings: dict, dryrun: bool):
     generate_requirements_file()
     generate_app_yaml(settings)
 
-    print("Running gcloud to deploy app")
-    subprocess.run(
-        [
-            "gcloud",
-            "app",
-            "deploy",
-            "app.yaml",
-            "--project=depmap-gumbo",
-            # "--no-cache",                            "--verbosity=debug",
-        ]
-    )
+    cmd = [
+        "gcloud",
+        "app",
+        "deploy",
+        "app.yaml",
+        "--project=depmap-gumbo",
+        # "--no-cache",                            "--verbosity=debug",
+    ]
+    if dryrun:
+        print(f"Dryrun: Skipping running {cmd}")
+    else:
+        print("Running gcloud to deploy app")
+        subprocess.run(cmd)
 
 
 def delete_oldest_version(service_name):
@@ -177,15 +179,20 @@ if __name__ == "__main__":
     parser.add_argument(
         "env", nargs="?", help="either 'prod' or 'staging'", default="prod"
     )
+    parser.add_argument(
+        "--dryrun",
+        help="If set, only prepares files, and prints out command for deploy, but does not actually deploy new service",
+        action="store_true",
+    )
     args = parser.parse_args()
 
     if args.env == "prod":
         settings = {"service_name": "rest-api-v2"}
-        settings.update(get_secrets("gumbo-client-readonly-config"))
+        settings.update(get_secrets("gumbo-client-config"))
     else:
         assert args.env == "staging"
         settings = {"service_name": "rest-api-v2-staging"}
         settings.update(get_secrets("gumbo-staging-client-config"))
 
-    deploy(settings)
+    deploy(settings, args.dryrun)
     delete_oldest_version(settings["service_name"])
