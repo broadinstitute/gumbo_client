@@ -75,6 +75,13 @@ def generate_requirements_file():
             if line.strip() == "":
                 continue
 
+            m = re.match("(dataframe-json-packing|gumbo-dao)==.*", line)
+            if m:
+                modabspath = os.path.abspath("../" + m.group(1))
+                localpath = relocate_to_relative_copy(f"file://{modabspath}")
+                fd.write(f"{localpath}\n")
+                continue
+
             m = re.match("\\S+$", line)
             if m:  # normal cases like "annotated-types==0.6.0"
                 fd.write(line + "\n")
