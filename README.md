@@ -8,18 +8,17 @@ A python package for reading/writing to the gumbo database
 *Note: the client has been switched to the v2 of the client which works very
 differently. The installation instructions below have changed*
 
-If using poetry, add the following to your pyproject.toml :
+If using poetry, run:
 
 ```
-gumbo-rest-client = { git = "https://github.com/broadinstitute/gumbo_client.git", subdirectory = "gumbo-rest-client" }
+poetry source add --priority=supplemental public-python https://us-central1-python.pkg.dev/cds-artifacts/public-python/simple/
+poetry add --source public-python gumbo-rest-service
 ```
-
-and run then run `poetry lock --no-update`
 
 Otherwise, if you don't use poetry, install via pip
 
 ```
-pip install git+https://git@github.com:broadinstitute/gumbo_client.git#egg=gumbo-rest-client&subdirectory=gumbo-rest-client
+pip install --extra-index-url=https://us-central1-python.pkg.dev/cds-artifacts/public-python/simple/ gumbo-rest-client
 ```
 
 This repo now only contains the new version of the gumbo client which no
@@ -41,7 +40,10 @@ df = client.get("depmap_model_type")
 Note: If you get an error about "Unable to acquire impersonated credentials ... PERMISSION_DENIED ... iam.serviceAccounts.getAccessToken" you are probably missing a required permission. Make sure your account has been granted "Service Account Token Creator" access on the service account gumbo-client-iap-auth@depmap-gumbo.iam.gserviceaccount.com .
 
 If you are writing your script to run from a non-interactive process, you will need
-a service account for it to run under and initialize the client. Also, you should pass in a useful label for username so we know the source of the updates when they
+a service account for it to run under and initialize the client. This service account will
+need to be granted access to the API via IAP permissions. To grant, go to https://console.cloud.google.com/security/iap?referrer=search&project=depmap-gumbo and grant the "IAP Secured Web App User" role to the service account on the resource "rest-api-v2" (for the production instance) and "rest-api-v2-staging" (for the staging instance).
+
+Also, you should pass in a useful label for username so we know the source of the updates when they
 are recorded to the audit log.
 
 Example:
