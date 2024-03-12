@@ -253,5 +253,12 @@
 		"sequence_max_corr":"SequenceMaxCorr", 
 		"screen_passes_qc":"ScreenPassesQC", 
 		"screen_id":"ScreenID"
+	}, 
+	"depmap_model_type":{
+		"depmap_code":"DepmapCode", 
+		"oncotree_code":"OncotreeCode", 
+		"lineage":"Lineage",
+		"subtype":"Subtype",
+		"primary_disease":"PrimaryDisease"
 	}
 }
