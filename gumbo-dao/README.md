@@ -18,3 +18,9 @@ tests are in the `tests` subdirectory and use an in-memory sqlite database for t
 ```
 pytest tests
 ```
+
+To publish new version, make sure to bump version in package.toml and run
+
+```
+poetry publish --build --repository public-python
+```
