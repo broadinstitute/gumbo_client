@@ -82,13 +82,13 @@ files = [
 
 [[package]]
 name = "dataframe-json-packing"
-version = "0.2.0"
+version = "0.2.1"
 description = ""
 optional = false
 python-versions = ">=3.8,<4.0"
 files = [
-    {file = "dataframe_json_packing-0.2.0-py3-none-any.whl", hash = "sha256:fe19bc587d282081389cf4d216f366190e6f14eb25c3050ada27fbd1cf6f04f5"},
-    {file = "dataframe_json_packing-0.2.0.tar.gz", hash = "sha256:a3d33ba8ed1e3c08eaa456ee5846c361f3b0bb28685ca7a2feaed7fa8ed6ef94"},
+    {file = "dataframe_json_packing-0.2.1-py3-none-any.whl", hash = "sha256:9d9a2dec4e045732028eef0231f9e0bec4c11c9e719c69b0b1b7d151118eb2a1"},
+    {file = "dataframe_json_packing-0.2.1.tar.gz", hash = "sha256:eb1b6819cc027f16e46f74e7f124cedf894a733d74a2a40839d58b51bb34ed8a"},
 ]
 
 [package.dependencies]
@@ -841,4 +841,4 @@ standard = ["colorama (>=0.4)", "httptools (>=0.5.0)", "python-dotenv (>=0.13)",
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "8398d613d99adc367b310571403252beba7bed3d468cbaf2314b0b56f6e4fbd5"
+content-hash = "1648f6fecb37620266e38608e0e938cd1706c7a26ce4e76abc2e2d8108e9a5b2"

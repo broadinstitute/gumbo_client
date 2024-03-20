@@ -19,3 +19,5 @@ test-data/
 app.yaml
 requirements.txt
 gumbo-rest-service/gumbo_rest_service/deploy_debug_info.py
+
+.idea/

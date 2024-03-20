@@ -19,3 +19,6 @@ __pycache__/
 /setup.cfg
 .pytest_cache/
 *~
+
+.venv/
+.idea/

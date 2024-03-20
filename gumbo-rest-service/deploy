@@ -64,42 +64,21 @@ def get_secrets(secret_name):
 def generate_requirements_file():
     print("Generating requirements.txt based on poetry environment...")
     requirements = subprocess.run(
-        ["poetry", "run", "pip", "freeze"],
+        [
+            "poetry",
+            "export",
+            "-f",
+            "requirements.txt",
+            "-o",
+            "./requirements.txt",
+            "--without-hashes",
+            "--only",
+            "main",
+        ],
         check=True,
         stdout=subprocess.PIPE,
         text=True,
     ).stdout
-
-    with open("requirements.txt", "wt") as fd:
-        for line in requirements.split("\n"):
-            if line.strip() == "":
-                continue
-
-            m = re.match("(dataframe-json-packing|gumbo-dao)==.*", line)
-            if m:
-                modabspath = os.path.abspath("../" + m.group(1))
-                localpath = relocate_to_relative_copy(f"file://{modabspath}")
-                fd.write(f"{localpath}\n")
-                continue
-
-            m = re.match("\\S+$", line)
-            if m:  # normal cases like "annotated-types==0.6.0"
-                fd.write(line + "\n")
-                continue
-
-            m = re.match("(\\S+)\\s+@\\s+(file://\\S+)$", line)
-            if m:  # cases where module is defined with a filepath to read it from
-                localpath = relocate_to_relative_copy(m.group(2))
-                fd.write(f"{localpath}\n")
-                continue
-
-            m = re.match("-e .*$", line)
-            if m:  # cases like "-e git+ssh://git@github.com/broad..." poetry
-                # seems to add this, but we should be able to ignore. Not sure
-                # exactly what this means
-                continue
-
-            raise Exception(f"Did not know how to handle: {repr(line)}")
 
 
 def generate_app_yaml(settings):
