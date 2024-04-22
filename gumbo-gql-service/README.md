@@ -57,7 +57,7 @@ CREATE SCHEMA IF NOT EXISTS hdb_catalog;
 After filling out `.env` based on the provided `.env.dist`, start the service with `docker compose up` and visit [http://localhost:8080](http://localhost:8080) to access the Hasura console. The password is whatever you set as the `HASURA_GRAPHQL_ADMIN_SECRET` variable.
 
 It's recommended to enable all of the feature flags in Settings. Among other things, they enable UI improvements on the Data tab.
-v
+
 ### Using the API
 
 Add a Postgres connection via the environment variable `PG_DATABASE_URL`, which maps to your localhost `gumbo-dev` database. Any tables, views, foreign keys, and functions that you choose to track on the Data tab will be available to query on the API tab.
