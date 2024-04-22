@@ -5,7 +5,7 @@ set -euo pipefail
 GUMBO_ENV=$1
 
 gcloud run deploy "gumbo-gql-service-${GUMBO_ENV}" \
-	--project=depmap-gumbo \
+    --project=depmap-gumbo \
     --image=hasura/graphql-engine:latest \
     --add-cloudsql-instances="depmap-gumbo:us-central1:gumbo-cloudsql" \
     --update-env-vars='HASURA_GRAPHQL_ENABLE_CONSOLE=true' \
