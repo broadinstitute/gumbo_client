@@ -24,8 +24,15 @@ def test_df_to_dict():
                 pd.to_datetime(datetime.datetime(2001, 2, 2, hour=2), utc=True),
                 None,
             ],
+            "json": [
+                "[1, 2, 3]",
+                '{"s": "foo", "a": [-5.5], "o": {"x": "y"}}',
+                "{}"
+            ]
         }
     ).convert_dtypes()
+
+    df['json'] = df['json'].apply(json.loads)
 
     packed = pack(df)
 
@@ -52,6 +59,15 @@ def test_df_to_dict():
                     None,
                 ],
             },
+            {
+                "name": "json",
+                "type": "json",
+                "values": [
+                    "[1, 2, 3]",
+                    '{"s": "foo", "a": [-5.5], "o": {"x": "y"}}',
+                    "{}"
+                ]
+            }
         ]
     }
 
