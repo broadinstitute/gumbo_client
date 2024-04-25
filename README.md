@@ -33,7 +33,7 @@ To use the new client, import `Client` from `gumbo_rest_client` and then use it 
 ```
 from gumbo_rest_client import Client
 
-client = api_client.Client()
+client = Client()
 df = client.get("depmap_model_type")
 ```
 
@@ -51,7 +51,7 @@ Example:
 ```
 from gumbo_rest_client import Client, create_authorized_session
 
-client = api_client.Client(username="my_script_name", 
+client = Client(username="my_script_name", 
     authed_session=create_authorized_session(use_default_service_account=True))
 df = client.get("depmap_model_type")
 ```
@@ -60,7 +60,7 @@ If you want to test against the staging version, provide a different `base_url`
 ```
 from gumbo_rest_client import Client, staging_url
 
-client = api_client.Client(base_url=staging_url)
+client = Client(base_url=staging_url)
 df = client.get("depmap_model_type")
 ```
 
@@ -80,7 +80,7 @@ The client will autocommit changes after insertions or updates.
 ```
 from gumbo_rest_client import Client
 
-client = api_client.Client()
+client = Client()
 
 # to read
 df = client.get("table_name")

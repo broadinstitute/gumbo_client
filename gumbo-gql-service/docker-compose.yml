@@ -1,0 +1,18 @@
+version: "3.6"
+services:
+  graphql-engine:
+    image: hasura/graphql-engine:v2.38.0
+    ports:
+      - "${LOCAL_DB_PORT}:5432"
+      - "8080:8080"
+    restart: always
+    environment:
+      # postgres database to store Hasura metadata
+      HASURA_GRAPHQL_METADATA_DATABASE_URL: "postgres://${HASURA_DB_USER}:${HASURA_DB_PASSWORD}@host.docker.internal:5432/${HASURA_DB_METADATA_DATABASE_NAME}"
+      # postgres database to use as a data source
+      PG_DATABASE_URL: "postgres://${HASURA_DB_USER}:${HASURA_DB_PASSWORD}@host.docker.internal:5432/${PG_DATABASE_NAME}"
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      HASURA_GRAPHQL_DEV_MODE: "true"
+      HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
+      HASURA_GRAPHQL_ADMIN_SECRET: "${HASURA_GRAPHQL_ADMIN_SECRET}"
+      HASURA_GRAPHQL_METADATA_DEFAULTS: '{}'

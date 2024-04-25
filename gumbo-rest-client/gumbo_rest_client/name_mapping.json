@@ -78,7 +78,9 @@
 		"split_recommendation": "SplitRecommendation",
 		"expansion_issues": "ExpansionIssues",
 		"expansion_completed_date": "ExpansionCompletedDate",
-		"dmx_priority": "DMXPriority"
+		"dmx_priority": "DMXPriority",
+		"drug_concentration":"DrugConcentration",
+		"days_with_drug":"DaysWithDrug"
 	},
 	"omics_profile": {
 		"profile_id": "ProfileID",
@@ -252,6 +254,16 @@
 		"qc_status":"QCStatus",
 		"sequence_max_corr":"SequenceMaxCorr", 
 		"screen_passes_qc":"ScreenPassesQC", 
-		"screen_id":"ScreenID"
+		"screen_id":"ScreenID",
+		"unexpected_high_correlation_partners":"UnexpectedHighCorrelationPartners", 
+		"unexpected_high_correlation":"UnexpectedHighCorrelation",
+		"confirmed_no_swap":"ConfirmedNoSwap"
+	}, 
+	"depmap_model_type":{
+		"depmap_code":"DepmapCode", 
+		"oncotree_code":"OncotreeCode", 
+		"lineage":"Lineage",
+		"subtype":"Subtype",
+		"primary_disease":"PrimaryDisease"
 	}
 }
