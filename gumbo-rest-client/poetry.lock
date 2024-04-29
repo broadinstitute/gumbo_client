@@ -181,13 +181,13 @@ files = [
 
 [[package]]
 name = "dataframe-json-packing"
-version = "0.2.1"
+version = "0.2.2"
 description = ""
 optional = false
 python-versions = ">=3.8,<4.0"
 files = [
-    {file = "dataframe_json_packing-0.2.1-py3-none-any.whl", hash = "sha256:9d9a2dec4e045732028eef0231f9e0bec4c11c9e719c69b0b1b7d151118eb2a1"},
-    {file = "dataframe_json_packing-0.2.1.tar.gz", hash = "sha256:eb1b6819cc027f16e46f74e7f124cedf894a733d74a2a40839d58b51bb34ed8a"},
+    {file = "dataframe_json_packing-0.2.2-py3-none-any.whl", hash = "sha256:f5956af79a16403ea7cf53c9ea005404f410003a320121f6d649915aa4aafff5"},
+    {file = "dataframe_json_packing-0.2.2.tar.gz", hash = "sha256:41fdf759c155b1c4a48b573500c973e456354c21bd21551c53c4708998fc63e6"},
 ]
 
 [package.dependencies]
@@ -276,17 +276,17 @@ reference = "public-python"
 
 [[package]]
 name = "gumbo-rest-service"
-version = "2.1.0"
+version = "2.1.3"
 description = ""
 optional = false
 python-versions = ">=3.9,<4.0"
 files = [
-    {file = "gumbo_rest_service-2.1.0-py3-none-any.whl", hash = "sha256:edf944940d4c4c757384c46a1eb4964d064fc19178138e12d1a1d7f14cf2da98"},
-    {file = "gumbo_rest_service-2.1.0.tar.gz", hash = "sha256:f1086a2da230843d0ee78e368514cfdef0680e403ff6b38e2343f9bfd7aa6a4e"},
+    {file = "gumbo_rest_service-2.1.3-py3-none-any.whl", hash = "sha256:9754c4a20cf550014b9cfe27b4b1cf987c09f40f18a5fae43def8cb62d9894f6"},
+    {file = "gumbo_rest_service-2.1.3.tar.gz", hash = "sha256:5f98fb28cc861a7afb4f2a7d2458249197678bc5d8d6a89393490e5f155211b9"},
 ]
 
 [package.dependencies]
-dataframe-json-packing = ">=0.2.0,<0.3.0"
+dataframe-json-packing = ">=0.2.2,<0.3.0"
 fastapi = ">=0.109.0,<0.110.0"
 google-auth = ">=2.26.2,<3.0.0"
 gumbo-dao = ">=0.1.0,<0.2.0"
@@ -1004,4 +1004,4 @@ standard = ["colorama (>=0.4)", "httptools (>=0.5.0)", "python-dotenv (>=0.13)",
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "797b6948074bb9cd48000e6fada45359f26bd1f29bc9522d8621f86b3ec39dba"
+content-hash = "a6f9be9d2ce037133a9408a8746ef277858974b74ea78e9a802d7fddcb75ebd7"

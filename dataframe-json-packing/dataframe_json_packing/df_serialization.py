@@ -1,4 +1,5 @@
 import datetime
+import json
 
 import pandas as pd
 
@@ -33,7 +34,18 @@ series_constructor_by_name = {
     "date": _date_column_from_ordinal,
     "datetime64": _datetime_column_from_string,
     "boolean": lambda values: pd.Series(data=values, dtype="boolean"),
+    "json": lambda values: pd.Series(data=[json.loads(x) for x in values], dtype="object"),
 }
+
+
+def _all_can_be_json(values):
+    for value in values:
+        try:
+            json.dumps(value)
+        except json.decoder.JSONDecodeError:
+            return False
+
+    return True
 
 
 def _all_are_dates(values):
@@ -48,7 +60,7 @@ def _replace_na_with_none(values, coerce):
     # a better way then making this loop, but not sure what
     result = []
     for value in values:
-        if pd.isna(value):
+        if not isinstance(value, list) and pd.isna(value):
             result.append(None)
         else:
             result.append(coerce(value))
@@ -78,13 +90,16 @@ def pack(df):
         elif type == "object":
             # special handling of "object" series because these
             # could be anything, but really they should only be
-            # used for dates
+            # used for dates or json
             if _all_are_dates(values):
                 type_name = "date"
                 coerce = lambda x: x.toordinal()
+            elif _all_can_be_json(values):
+                type_name = "json"
+                coerce = json.dumps
             else:
                 raise Exception(
-                    f"Column {column_name} was type object but elements not dates: {values}..."
+                    f"Column {column_name} was type object but elements not dates or JSON: {values}..."
                 )
         else:
             raise Exception(f"Column {column_name} unknown type: {type}")
