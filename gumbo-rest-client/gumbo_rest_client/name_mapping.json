@@ -257,7 +257,8 @@
 		"screen_id":"ScreenID",
 		"unexpected_high_correlation_partners":"UnexpectedHighCorrelationPartners", 
 		"unexpected_high_correlation":"UnexpectedHighCorrelation",
-		"confirmed_no_swap":"ConfirmedNoSwap"
+		"confirmed_no_swap":"ConfirmedNoSwap", 
+		"sequence_frac_reads_from_other_library_subset":"SequenceFracReadsFromOtherLibrarySubset"
 	}, 
 	"depmap_model_type":{
 		"depmap_code":"DepmapCode", 
