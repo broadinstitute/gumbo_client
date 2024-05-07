@@ -60,9 +60,9 @@ It's recommended to enable all of the feature flags in Settings. Among other thi
 
 ### Using the API
 
-Add a Postgres connection via the environment variable `PG_DATABASE_URL`, which maps to your localhost `gumbo-dev` database. Any tables, views, foreign keys, and functions that you choose to track on the Data tab will be available to query on the API tab.
+Add a Postgres connection via the environment variable `PG_DATABASE_URL`, which maps to your localhost `gumbo-dev` database. Any tables, views, foreign keys, and functions that you choose to track on the Data tab will be available to query on the API tab. Because the Gumbo database is so large, it's recommended to add resources to track in chunks of 10 or so, rather than all at once, which might cause the request to time out.
 
-One of these items should be the `public / set_username` function, which sets the `my.username` Postgres runtime setting and is required for running mutations. To perform a mutation, the first block must always be a call to this function, e.g.:
+One of these items to track should be the `public / set_username` function, which sets the `my.username` Postgres runtime setting and is required for running mutations. To perform a mutation, the first block must always be a call to this function, e.g.:
 
 ```graphql
 mutation MyMutation {
