@@ -6,6 +6,7 @@ import json
 from .auth import create_authorized_session
 import getpass
 from .const import prod_url
+import requests
 
 
 class Client:
@@ -32,7 +33,10 @@ class Client:
     def _check_response_code(self, response):
         if response.status_code == 404:
             raise UnknownTable()
-        response.raise_for_status()
+        if response.status_code != 200:
+            raise Exception(
+                f"{response.status_code} Error from Gumbo REST Service: {response.text}"
+            )
 
     def get(self, table_name: str) -> pd.DataFrame:
         url = f"{self.base_url}/table/{table_name}"

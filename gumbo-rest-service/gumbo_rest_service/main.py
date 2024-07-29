@@ -1,14 +1,15 @@
 import os
 from typing import Annotated
 
-from fastapi import FastAPI, Depends, HTTPException, Header
+from fastapi import FastAPI, Depends, HTTPException
 from dotenv import load_dotenv, find_dotenv
 import psycopg2
 from gumbo_dao import GumboDAO
 from dataframe_json_packing import pack, unpack
 from pydantic import BaseModel
 from enum import Enum
-from typing import Optional, List, Any
+from typing import Optional, Any
+import traceback
 
 import re
 
@@ -83,14 +84,17 @@ async def update_table(
     update: Update,
     gumbo_dao: Annotated[GumboDAO, Depends(get_gumbo_dao)],
 ):
-    updated_rows_df = unpack(update.data)
-    if update.mode == UpdateMode.insert_only:
-        gumbo_dao.insert_only(
-            update.username, table_name, updated_rows_df, reason=update.reason
-        )
-    elif update.mode == UpdateMode.update_only:
-        gumbo_dao.update_only(
-            update.username, table_name, updated_rows_df, reason=update.reason
-        )
-    else:
-        raise Exception(f"Invalid mode {update.mode}")
+    try:
+        updated_rows_df = unpack(update.data)
+        if update.mode == UpdateMode.insert_only:
+            gumbo_dao.insert_only(
+                update.username, table_name, updated_rows_df, reason=update.reason
+            )
+        elif update.mode == UpdateMode.update_only:
+            gumbo_dao.update_only(
+                update.username, table_name, updated_rows_df, reason=update.reason
+            )
+        else:
+            raise Exception(f"Invalid mode {update.mode}")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=traceback.format_exc())
