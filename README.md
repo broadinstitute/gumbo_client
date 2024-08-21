@@ -12,7 +12,7 @@ If using poetry, run:
 
 ```
 poetry source add --priority=supplemental public-python https://us-central1-python.pkg.dev/cds-artifacts/public-python/simple/
-poetry add --source public-python gumbo-rest-service
+poetry add --source public-python gumbo-rest-client
 ```
 
 Otherwise, if you don't use poetry, install via pip
@@ -36,15 +36,6 @@ from gumbo_rest_client import Client
 client = Client()
 df = client.get("depmap_model_type")
 ```
-
-Note: If you get an error about "Unable to acquire impersonated credentials ... PERMISSION_DENIED ... iam.serviceAccounts.getAccessToken" you are probably missing a required permission. Make sure your account has been granted "Service Account Token Creator" access on the service account gumbo-client-iap-auth@depmap-gumbo.iam.gserviceaccount.com .
-
-If you are writing your script to run from a non-interactive process, you will need
-a service account for it to run under and initialize the client. This service account will
-need to be granted access to the API via IAP permissions. To grant, go to https://console.cloud.google.com/security/iap?referrer=search&project=depmap-gumbo and grant the "IAP Secured Web App User" role to the service account on the resource "rest-api-v2" (for the production instance) and "rest-api-v2-staging" (for the staging instance).
-
-Also, you should pass in a useful label for username so we know the source of the updates when they
-are recorded to the audit log.
 
 Example:
 
@@ -100,6 +91,25 @@ client.insert_only("table_name", new_rows_df) # throws an exception if a given r
 # finally, close the database connection
 client.close()
 ```
+
+## Debugging Connection Issues
+
+If you get a "Bad Request" error while trying to create the client (`client = Client()`):
+1. Make sure you are logged in with Broad Google account, not a service account. You can check by running `gcloud auth list`
+2. It's possible you have previously set application-default credentials set which are overriding your main user credentials.
+You can try resetting the application default credentials by running `cloud auth application-default login` and logging in 
+with your Broad Google account. 
+
+If you get an error about "Unable to acquire impersonated credentials ... PERMISSION_DENIED ... iam.serviceAccounts.getAccessToken" you are probably missing a required permission. Make sure your account has been granted "Service Account Token Creator" access on the service account gumbo-client-iap-auth@depmap-gumbo.iam.gserviceaccount.com. 
+
+### Using the client with a service account 
+If you are writing your script to run from a non-interactive process, you will need
+a service account for it to run under and initialize the client. This service account will
+need to be granted access to the API via IAP permissions. To grant, go to https://console.cloud.google.com/security/iap?referrer=search&project=depmap-gumbo and grant the "IAP Secured Web App User" role to the service account on the resource "rest-api-v2" (for the production instance) and "rest-api-v2-staging" (for the staging instance).
+
+Also, you should pass in a useful label for username so we know the source of the updates when they
+are recorded to the audit log.
+
 
 ## Running tests
 
