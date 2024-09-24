@@ -29,7 +29,10 @@ service. From the users perspective this just means:
 2. No need for the client to launch a separate task in the background
 3. Fewer connection errors 
 
-To use the new client, import `Client` from `gumbo_rest_client` and then use it as you normally would to read tables. For example:
+To use the new client, first run `gcloud auth application-default login` to set up your google credentials which will be used as the default app credientials. 
+
+Afterwards, you should be able to import `Client` from `gumbo_rest_client` and then use it as you normally would to read tables such as in the below:
+
 ```
 from gumbo_rest_client import Client
 
@@ -37,7 +40,7 @@ client = Client()
 df = client.get("depmap_model_type")
 ```
 
-Example:
+If you're writing a script which _should_ use a service account instead of your **user** credentials, make sure the service account is set up to be the default app credentials (setting `GOOGLE_APPLICATION_CREDENTIALS` if necessary) and then use the following code to create the client:
 
 ```
 from gumbo_rest_client import Client, create_authorized_session
