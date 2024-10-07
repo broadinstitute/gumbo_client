@@ -79,12 +79,6 @@ client = Client()
 # to read
 df = client.get("table_name")
 
-# to create new rows and/or update existing rows, modify the dataframe and then run:
-client.update("table_name", df)
-
-# to update the table to exactly match the dataframe, run:
-client.update("table_name", df, delete_missing_rows=True)
-
 # to only update existing rows:
 client.update_only("table_name", df) # throws an exception if a given row doesn't already exist
 
