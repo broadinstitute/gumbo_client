@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "gumbo-rest-client"
-version = "2.0.5"
+version = "2.0.6"
 description = ""
 authors = ["Your Name <you@example.com>"]
 readme = "README.md"
@@ -12,6 +12,7 @@ requests = "^2.31.0"
 pytest = "^7.4.4"
 google-auth = "^2.26.2"
 pandas = "^1.4"
+numpy = "1.26.4" # Pinned to fix version incompatibility
 # dataframe-json-packing = {path = "../dataframe-json-packing", develop = true}
 dataframe-json-packing = {version = "^0.2.2", source = "public-python"}
 
