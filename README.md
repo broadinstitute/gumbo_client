@@ -97,7 +97,7 @@ If you get a "Bad Request" error while trying to create the client (`client = Cl
 You can try resetting the application default credentials by running `cloud auth application-default login` and logging in 
 with your Broad Google account. 
 
-If you get an error about "Unable to acquire impersonated credentials ... PERMISSION_DENIED ... iam.serviceAccounts.getAccessToken" you are probably missing a required permission. Make sure your account has been granted "Service Account Token Creator" access on the service account gumbo-client-iap-auth@depmap-gumbo.iam.gserviceaccount.com. 
+If you get an error about "Unable to acquire impersonated credentials ... PERMISSION_DENIED ... iam.serviceAccounts.getAccessToken" you are probably missing a required permission. Make sure your account has been granted "Service Account Token Creator" access on the service account gumbo-client-iap-auth@depmap-gumbo.iam.gserviceaccount.com. An admin can make this change in the Google Console's Service Account page (under the `depmap-gumbo` project). 
 
 ### Using the client with a service account 
 If you are writing your script to run from a non-interactive process, you will need
