@@ -37,7 +37,7 @@ def read_root():
 def run_query(name: str, key: str = None, client: Client = Depends(get_gumbo_client)):
     cur = client.connection.cursor()
     try:
-        cur.execute("select key, query from gumbo_external_query geq where name = %s", [name])
+        cur.execute("select key, query from gumbo_external_query geq where id = %s", [name])
         rows = cur.fetchall()
         if len(rows) == 0:
             raise HTTPException(status_code=404, detail="Unknown query")
