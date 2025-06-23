@@ -306,3 +306,23 @@ class GumboDAO:
             )
         finally:
             cursor.close()
+
+
+    def delete(self, username, table_name, pk_name, ids, reason=None):
+        """
+        Delete the rows with the given primary keys.
+        """
+        self._set_username(username)
+
+        cursor = self.connection.cursor()
+        try:
+            _delete_rows(cursor, table_name, pk_name, ids)
+            _log_bulk_update(
+                self.connection,
+                username,
+                table_name,
+                rows_deleted=len(ids),
+                reason=reason,
+            )
+        finally:
+            cursor.close()

@@ -1,11 +1,11 @@
-version: "3.6"
 services:
   graphql-engine:
-    image: hasura/graphql-engine:v2.38.0
+    image: hasura/graphql-engine:v2.42.0
+    platform: linux/arm64
     ports:
       - "${LOCAL_DB_PORT}:5432"
       - "8080:8080"
-    restart: always
+    restart: no
     environment:
       # postgres database to store Hasura metadata
       HASURA_GRAPHQL_METADATA_DATABASE_URL: "postgres://${HASURA_DB_USER}:${HASURA_DB_PASSWORD}@host.docker.internal:5432/${HASURA_DB_METADATA_DATABASE_NAME}"

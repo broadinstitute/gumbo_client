@@ -29,7 +29,10 @@ service. From the users perspective this just means:
 2. No need for the client to launch a separate task in the background
 3. Fewer connection errors 
 
-To use the new client, import `Client` from `gumbo_rest_client` and then use it as you normally would to read tables. For example:
+To use the new client, first run `gcloud auth application-default login` to set up your google credentials which will be used as the default app credientials. 
+
+Afterwards, you should be able to import `Client` from `gumbo_rest_client` and then use it as you normally would to read tables such as in the below:
+
 ```
 from gumbo_rest_client import Client
 
@@ -37,7 +40,7 @@ client = Client()
 df = client.get("depmap_model_type")
 ```
 
-Example:
+If you're writing a script which _should_ use a service account instead of your **user** credentials, make sure the service account is set up to be the default app credentials (setting `GOOGLE_APPLICATION_CREDENTIALS` if necessary) and then use the following code to create the client:
 
 ```
 from gumbo_rest_client import Client, create_authorized_session
@@ -76,12 +79,6 @@ client = Client()
 # to read
 df = client.get("table_name")
 
-# to create new rows and/or update existing rows, modify the dataframe and then run:
-client.update("table_name", df)
-
-# to update the table to exactly match the dataframe, run:
-client.update("table_name", df, delete_missing_rows=True)
-
 # to only update existing rows:
 client.update_only("table_name", df) # throws an exception if a given row doesn't already exist
 
@@ -100,7 +97,7 @@ If you get a "Bad Request" error while trying to create the client (`client = Cl
 You can try resetting the application default credentials by running `cloud auth application-default login` and logging in 
 with your Broad Google account. 
 
-If you get an error about "Unable to acquire impersonated credentials ... PERMISSION_DENIED ... iam.serviceAccounts.getAccessToken" you are probably missing a required permission. Make sure your account has been granted "Service Account Token Creator" access on the service account gumbo-client-iap-auth@depmap-gumbo.iam.gserviceaccount.com. 
+If you get an error about "Unable to acquire impersonated credentials ... PERMISSION_DENIED ... iam.serviceAccounts.getAccessToken" you are probably missing a required permission. Make sure your account has been granted "Service Account Token Creator" access on the service account gumbo-client-iap-auth@depmap-gumbo.iam.gserviceaccount.com. An admin can make this change in the Google Console's Service Account page (under the `depmap-gumbo` project). 
 
 ### Using the client with a service account 
 If you are writing your script to run from a non-interactive process, you will need
