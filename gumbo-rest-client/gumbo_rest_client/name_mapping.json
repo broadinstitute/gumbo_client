@@ -1,6 +1,6 @@
 {
 	"model": {
-		"model_id": "ModelID",
+		"id": "ModelID",
 		"patient_id": "PatientID",
 		"cell_line_name": "CellLineName",
 		"stripped_cell_line_name": "StrippedCellLineName",
@@ -40,7 +40,7 @@
 		"permission_to_release": "PermissionToRelease"
 	},
 	"model_condition": {
-		"model_condition_id": "ModelConditionID",
+		"id": "ModelConditionID",
 		"condition_only": "ConditionOnly",
 		"doubling_time": "DoublingTime",
 		"ccle_doubling_time": "CCLEDoublingTime",
@@ -83,7 +83,7 @@
 		"days_with_drug":"DaysWithDrug"
 	},
 	"omics_profile": {
-		"profile_id": "ProfileID",
+		"id": "ProfileID",
 		"registered": "Registered",
 		"model_condition": "ModelCondition",
 		"omics_order_date": "OmicsOrderDate",
@@ -139,7 +139,7 @@
 		"eta": "ETA"
 	},
 	"omics_sequencing": {
-		"sequencing_id": "SequencingID",
+		"id": "SequencingID",
 		"source": "source",
 		"pdo_id": "PdoId",
 		"sm_id": "SmId",
@@ -166,7 +166,7 @@
 		"prioritized": "prioritized"
 	},
 	"screen": {
-		"screen_id": "ScreenID",
+		"id": "ScreenID",
 		"previous_screening_id": "PreviousScreeningID",
 		"model_condition_id": "ModelConditionID",
 		"sample_id": "SampleID",
@@ -203,7 +203,7 @@
 		"exclude_from_crispr_combined":"ExcludeFromCRISPRCombined"
 	},
 	"screen_sequence": {
-		"sequence_entry":"SequenceEntry",
+		"id":"SequenceEntry",
 		"sequence_id": "SequenceID",
 		"previous_arxspan_id": "PreviousArxspanID",
 		"screen_id": "ScreenID",
@@ -242,7 +242,7 @@
 		"screen_permission_to_release":"ScreenPermissionToRelease"
 	},
 	"screen_sequence_qc":{
-		"sequence_entry":"SequenceEntry", 
+		"screen_sequence_id":"SequenceEntry", 
 		"sequence_id":"SequenceID", 
 		"release_sequence_id":"ReleaseSequenceID",
 		"sequence_fingerprint_pass":"SequenceFingerprintPass",
@@ -261,7 +261,7 @@
 		"sequence_frac_reads_from_other_library_subset":"SequenceFracReadsFromOtherLibrarySubset"
 	}, 
 	"depmap_model_type":{
-		"depmap_code":"DepmapCode", 
+		"id":"DepmapCode", 
 		"oncotree_code":"OncotreeCode", 
 		"lineage":"Lineage",
 		"subtype":"Subtype",
