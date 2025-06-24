@@ -85,7 +85,7 @@
 	"omics_profile": {
 		"id": "ProfileID",
 		"registered": "Registered",
-		"model_condition": "ModelCondition",
+		"model_condition_id": "ModelCondition",
 		"omics_order_date": "OmicsOrderDate",
 		"kit_id": "KitID",
 		"omics_profile_funding_source": "OmicsProfileFundingSource",
@@ -143,7 +143,7 @@
 		"source": "source",
 		"pdo_id": "PdoId",
 		"sm_id": "SmId",
-		"profile_id": "ProfileID",
+		"omics_profile_id": "ProfileID",
 		"version": "version",
 		"size": "size",
 		"bam_filepath": "bam_filepath",
