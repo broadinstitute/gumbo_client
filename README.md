@@ -134,8 +134,9 @@ poetry config repositories.public-python https://us-central1-python.pkg.dev/cds-
 # also make sure you've authentication via "gcloud auth login" if you haven't already
 ```
 
-And then you can bump the version of the package:
+And then you can navigate into the package directory and bump the version of the package. For example:
 ```
+cd gumbo-rest-client/
 poetry version patch
 ```
 
