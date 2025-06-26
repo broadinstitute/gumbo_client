@@ -121,7 +121,7 @@ In the parent run `./all_tests.sh` to run all tests. Alternatively you can
 run pytest`.
 
 
-## Publishing new versions of the python packages
+## Publishing new versions of the gumbo client python package
 
 There's nothing in this repo that is private or secret, however, this is an internal
 tool, so it doesn't seem like it should be published on Pypi. Instead we can publish to an internal package index. 
@@ -134,7 +134,7 @@ poetry config repositories.public-python https://us-central1-python.pkg.dev/cds-
 # also make sure you've authentication via "gcloud auth login" if you haven't already
 ```
 
-And then you can navigate into the package directory and bump the version of the package. For example:
+Then you can navigate into the package directory and bump the version:
 ```
 cd gumbo-rest-client/
 poetry version patch
