@@ -121,7 +121,7 @@ In the parent run `./all_tests.sh` to run all tests. Alternatively you can
 run pytest`.
 
 
-## publishing package to internal package repo
+## Publishing new versions of the python packages
 
 There's nothing in this repo that is private or secret, however, this is an internal
 tool, so it doesn't seem like it should be published on Pypi. Instead we can publish to an internal package index. 
@@ -134,8 +134,12 @@ poetry config repositories.public-python https://us-central1-python.pkg.dev/cds-
 # also make sure you've authentication via "gcloud auth login" if you haven't already
 ```
 
-And then you can publish via:
+And then you can bump the version of the package:
+```
+poetry version patch
+```
 
+And then publish via:
 ```
 poetry publish --build --repository public-python
 ```
