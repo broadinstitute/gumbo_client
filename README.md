@@ -134,6 +134,9 @@ poetry config repositories.public-python https://us-central1-python.pkg.dev/cds-
 # also make sure you've authentication via "gcloud auth login" if you haven't already
 ```
 
+If you get an "HTTP Error 401: Unauthorized" error, you may need to be granted additional permissions in order to push to this repository. 
+Reach out to someone on the software team for help. They should be able to grant you permissions [here](https://console.cloud.google.com/iam-admin/iam?referrer=search&project=cds-artifacts) in the GCP console.
+
 Then you can navigate into the package directory and bump the version:
 ```
 cd gumbo-rest-client/
