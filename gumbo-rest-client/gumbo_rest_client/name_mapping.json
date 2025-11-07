@@ -269,6 +269,6 @@
 	}, 
 	"screen_destination_dataset":{
 		"screen_id": "ScreenID",
-		"destination_datasets": "DestinationDatasets"
+		"destination_dataset": "DestinationDataset"
 	}
 }
