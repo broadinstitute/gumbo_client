@@ -221,7 +221,8 @@
 		"str_query_name": "STRQueryName",
 		"cds_exclude": "CDSExclude",
 		"cds_sep_qc": "CDSRepQC",
-		"exclusion_notes": "ExclusionNotes"
+		"exclusion_notes": "ExclusionNotes", 
+		"cpd": "CPD"
 	},
 	"screen_qc":{
 		"screen_id":"ScreenID", 
