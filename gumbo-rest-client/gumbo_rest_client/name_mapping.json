@@ -37,7 +37,8 @@
 		"ncit_subtype": "NCITSubtype",
 		"new_molecular_subtype": "NewMolecularSubtype",
 		"new_histological_subtype": "NewHistologicalSubtype",
-		"permission_to_release": "PermissionToRelease"
+		"permission_to_release": "PermissionToRelease", 
+		"engineered_model": "EngineeredModel"
 	},
 	"model_condition": {
 		"id": "ModelConditionID",
@@ -271,5 +272,12 @@
 	"screen_destination_dataset":{
 		"screen_id": "ScreenID",
 		"destination_dataset": "DestinationDataset"
+	}, 
+	"screen_pair":{
+		"id": "PairID", 
+		"control_arm_screen_id": "CtrlArmScreenID",
+		"test_arm_screen_id":"TestArmScreenID", 
+		"comparison_type":"ComaprisonType", 
+		"qc_status":"QCStatus"
 	}
 }
