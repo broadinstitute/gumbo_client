@@ -277,7 +277,7 @@
 		"id": "PairID", 
 		"control_arm_screen_id": "CtrlArmScreenID",
 		"test_arm_screen_id":"TestArmScreenID", 
-		"comparison_type":"ComaprisonType", 
+		"comparison_type":"ComparisonType", 
 		"qc_status":"QCStatus"
 	}
 }
